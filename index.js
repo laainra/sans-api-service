@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   cookieSession({
       name: "agv-session",
-      secret: "HEXAROS_COOKIE_ZXNBV",
+      secret: "SANS_COOKIE_ZXNBV",
       httpOnly: true
 
   })
