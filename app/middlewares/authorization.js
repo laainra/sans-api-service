@@ -5,7 +5,7 @@ const User = db.user;
 
 const authJwt = (req, res, next) => {
   let token = req.headers.authorization;
-  console.log(token);
+  
   if (!token || !token.startsWith("Bearer ")) {
     return res.status(403).send({
       message: "Unauthorized, No token provided!"
