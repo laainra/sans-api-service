@@ -10,7 +10,7 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerDocs = require('./app/swagger.json');
 const swaggerWs = require('express-ws');
 
-const app = express();
+const app = express.Router();
 const dotenv = require("dotenv")
 
 dotenv.config()
