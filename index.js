@@ -1,15 +1,16 @@
 const express = require("express");
 const cors = require("cors");
 const cookieSession = require("cookie-session");
-const db = require("./app/models");
-const authRoutes = require("./app/routes/auth.routes");
-const userRoutes = require("./app/routes/user.routes");
-const agvRoutes = require("./app/routes/agv.routes");
-const dbConfig = require("./app/config/db.configs");
+const db = require("../../app/models");
+const authRoutes = require("../../app/routes/auth.routes");
+const userRoutes = require("../../app/routes/user.routes");
+const agvRoutes = require("../../app/routes/agv.routes");
+const dbConfig = require("../../app/config/db.configs");
 const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerWs = require('express-ws');
+const serverless = require("serverless-http");
 
 const app = express();
 const dotenv = require("dotenv")
@@ -91,7 +92,6 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
 
-console.log(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${dbConfig.HOST}/${dbConfig.DB}`);
 db.mongoose
   .connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${dbConfig.HOST}/${dbConfig.DB}`, {
     useNewUrlParser: true,
@@ -109,4 +109,4 @@ authRoutes(app);
 userRoutes(app);
 agvRoutes(app);
 
-module.exports = app
+module.export = handler = serverless(api);
