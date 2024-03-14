@@ -1,0 +1,95 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API SANS AGV",
+    "description": "API SANS AGV",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://127.0.0.1:9000/api",
+      "description": "SwaggerHub API Auto Mocking"
+    }
+  ],
+  "paths": {
+    "/auth/signup": {
+      "get": {
+        "tags": [
+          "Signup"
+        ],
+        "summary": "Register",
+        "description": "Resgitrasi user baru\n",
+        "operationId": "signup",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "description": "name",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "description": "username",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "description": "password",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "search results matching criteria"
+          },
+          "400": {
+            "description": "bad input parameter"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+          },
+          "name": {
+            "type": "string",
+            "example": "sans"
+          },
+          "username": {
+            "type": "string",
+            "example": "sanas"
+          },
+          "password": {
+            "type": "string",
+            "example": "sans"
+          }
+        }
+      }
+    }
+  }
+}
