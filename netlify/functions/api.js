@@ -61,7 +61,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:9000/api",
+        url: "https://master--sans-api-service.netlify.app/api/",
       },
     ],
   },
