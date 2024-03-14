@@ -109,4 +109,4 @@ authRoutes(app);
 userRoutes(app);
 agvRoutes(app);
 
-module.export = handler = serverless(api);
+module.export = handler = serverless(app);
