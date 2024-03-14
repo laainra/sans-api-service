@@ -1,19 +1,19 @@
 const express = require("express");
 const cors = require("cors");
 const cookieSession = require("cookie-session");
-const db = require("../../app/models");
-const authRoutes = require("../../app/routes/auth.routes");
-const userRoutes = require("../../app/routes/user.routes");
-const agvRoutes = require("../../app/routes/agv.routes");
-const dbConfig = require("../../app/config/db.configs");
+const db = require("./app/models");
+const authRoutes = require("./app/routes/auth.routes");
+const userRoutes = require("./app/routes/user.routes");
+const agvRoutes = require("./app/routes/agv.routes");
+const dbConfig = require("./app/config/db.configs");
 const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerWs = require('express-ws');
-const serverless = require("serverless-http");
+const dotenv = require("dotenv");
+const swaggerConfig = require("./app/config/swagger.config");
 
 const app = express();
-const dotenv = require("dotenv")
 
 dotenv.config()
 
@@ -37,38 +37,7 @@ app.use(
   })
 );
 
-const options = {
-  definition: {
-    openapi: "3.1.0",
-    info: {
-      title: "SANS AGV API",
-      version: "0.1.0",
-      description:
-        "AGV interface",
-      license: {
-        name: "MIT",
-        url: "https://spdx.org/licenses/MIT.html",
-      },
-    },
-    components: {
-      securitySchemes: {
-        Bearer: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        }
-      }
-    },
-    servers: [
-      {
-        url: "http://localhost:9000/api",
-      },
-    ],
-  },
-  apis: ["./app/routes/*.js", "./app/models/*.js",],
-};
-
-const specs = swaggerJsdoc(options);
+const specs = swaggerJsdoc(swaggerConfig);
 
 app.use(
   "/api-docs",
@@ -108,5 +77,3 @@ db.mongoose
 authRoutes(app);
 userRoutes(app);
 agvRoutes(app);
-
-module.export = handler = serverless(app);
