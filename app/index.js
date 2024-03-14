@@ -1,14 +1,14 @@
 const express = require("express");
 const cors = require("cors");
 const cookieSession = require("cookie-session");
-const db = require("./app/models");
-const authRoutes = require("./app/routes/auth.routes");
-const userRoutes = require("./app/routes/user.routes");
-const dbConfig = require("./app/config/db.configs");
+const db = require("./models");
+const authRoutes = require("./routes/auth.routes");
+const userRoutes = require("./routes/user.routes");
+const agvRoutes = require("./routes/agv.routes");
+const dbConfig = require("./config/db.configs");
 const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require("swagger-jsdoc");
-const swaggerDocs = require('./app/swagger.json');
 const swaggerWs = require('express-ws');
 
 const app = express();
@@ -49,6 +49,15 @@ const options = {
         url: "https://spdx.org/licenses/MIT.html",
       },
     },
+    components: {
+      securitySchemes: {
+        Bearer: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        }
+      }
+    },
     servers: [
       {
         url: "http://localhost:9000/api",
@@ -77,7 +86,7 @@ app.ws('/echo', function(ws, req) {
   });
 });
 
-const PORT = process.env.PORT || 9000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
@@ -98,5 +107,6 @@ db.mongoose
 
 authRoutes(app);
 userRoutes(app);
+agvRoutes(app);
 
 module.exports = app
