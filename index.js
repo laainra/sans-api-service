@@ -96,3 +96,5 @@ db.mongoose
   });
 
 authRoutes(app);
+
+module.exports = app
