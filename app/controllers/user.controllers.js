@@ -2,12 +2,12 @@ const User = require('../models/user.model.js');
 const bcrypt = require('bcrypt');
 
 exports.getUserData = (req, res) => {
-    const userId = req.cookies.userId;
-
+    const userId = req.userId;
+    
     User.findById(userId)
         .then(user => {
             if (!user) {
-                return res.status(404).json({ message: "User not found" });
+                res.status(401).json({ message: "User not found" });
             }
             res.status(200).json(user);
         })
@@ -17,12 +17,12 @@ exports.getUserData = (req, res) => {
 };
 
 exports.updateUserData = (req, res) => {
-    const userId = req.cookies.userId;
+    const userId = req.userId;
 
     User.findById(userId)
         .then(user => {
             if (!user) {
-                return res.status(404).json({ message: "User not found" });
+                return res.status(401).json({ message: "User not found" });
             }
 
             user.name = req.body.name || user.name;

@@ -3,6 +3,7 @@ const cors = require("cors");
 const cookieSession = require("cookie-session");
 const db = require("./app/models");
 const authRoutes = require("./app/routes/auth.routes");
+const userRoutes = require("./app/routes/user.routes");
 const dbConfig = require("./app/config/db.configs");
 const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
@@ -10,16 +11,16 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerDocs = require('./app/swagger.json');
 const swaggerWs = require('express-ws');
 
-const app = express.Router();
+const app = express();
 const dotenv = require("dotenv")
 
 dotenv.config()
 
 var corsOptions = {
-  origin: "http://localhost:8081",
+  origin: "http://localhost:5174",
 };
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.use(bodyParser.json());
 
@@ -96,5 +97,6 @@ db.mongoose
   });
 
 authRoutes(app);
+userRoutes(app);
 
 module.exports = app
