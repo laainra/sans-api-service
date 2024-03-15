@@ -1,7 +1,5 @@
 const jwt = require("jsonwebtoken");
 const config = require("../config/auth.config.js");
-const db = require("../models");
-const User = db.user;
 
 const authJwt = (req, res, next) => {
   let token = req.headers.authorization;
@@ -22,19 +20,6 @@ const authJwt = (req, res, next) => {
     }
     req.userId = decoded.id;
     next();
-  //   User.findByPk(decoded.id)
-  //     .then(user => {
-  //       if (!user) {
-  //         return res.status(404).send({ message: "User not found" });
-  //       }
-  //       req.user = user; 
-  //       next();
-  //     })
-  //     .catch(err => {
-  //       res.status(500).send({
-  //         message: err.message || "Error retrieving user."
-  //       });
-  //     });
   });
 };
 

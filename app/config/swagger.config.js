@@ -22,7 +22,7 @@ module.exports = {
       },
       servers: [
         {
-          url: "http://localhost:9000/api",
+          url: "https://tidy-terribly-boa.ngrok-free.app/api/",
         },
       ],
     },

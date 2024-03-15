@@ -5,6 +5,7 @@ const db = require("./app/models");
 const authRoutes = require("./app/routes/auth.routes");
 const userRoutes = require("./app/routes/user.routes");
 const agvRoutes = require("./app/routes/agv.routes");
+const stationRoutes = require("./app/routes/station.routes");
 const dbConfig = require("./app/config/db.configs");
 const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
@@ -40,13 +41,13 @@ app.use(
 const specs = swaggerJsdoc(swaggerConfig);
 
 app.use(
-  "/api-docs",
+  "/docs",
   swaggerUi.serve,
   swaggerUi.setup(specs, { explorer: true })
 );
 
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to SANS-AGV API Service." });
+  res.redirect('/docs')
 });
 
 app.ws('/echo', function(ws, req) {
@@ -77,3 +78,4 @@ db.mongoose
 authRoutes(app);
 userRoutes(app);
 agvRoutes(app);
+stationRoutes(app);
