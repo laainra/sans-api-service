@@ -22,7 +22,7 @@ module.exports = {
       },
       servers: [
         {
-          url: "https://tidy-terribly-boa.ngrok-free.app/api/",
+          url: "https://sans-api-service.onrender.com/api/",
         },
       ],
     },
