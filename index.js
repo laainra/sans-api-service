@@ -10,9 +10,10 @@ const dbConfig = require("./app/config/db.configs");
 const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require("swagger-jsdoc");
-const swaggerWs = require('express-ws');
+const ws = require('express-ws');
 const dotenv = require("dotenv");
 const swaggerConfig = require("./app/config/swagger.config");
+const websocket = require("./app/ws/websocket");
 
 const app = express();
 
@@ -28,7 +29,7 @@ app.use(bodyParser.json());
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-swaggerWs(app);
+const wss = ws(app);
 
 app.use(
   cookieSession({
@@ -48,13 +49,6 @@ app.use(
 
 app.get("/", (req, res) => {
   res.redirect('/docs')
-});
-
-app.ws('/echo', function(ws, req) {
-  console.log("Got websocket connection")
-  ws.on('message', function(msg) {
-    ws.send(msg);
-  });
 });
 
 const PORT = process.env.PORT || 3000;
@@ -77,5 +71,8 @@ db.mongoose
 
 authRoutes(app);
 userRoutes(app);
+websocket(app);
 agvRoutes(app);
 stationRoutes(app);
+
+// ngrok http --domain=tidy-terribly-boa.ngrok-free.app 80
