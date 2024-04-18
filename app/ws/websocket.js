@@ -1,6 +1,11 @@
+const ROSLIB = require("roslib/src/RosLib");
+
 const clientsByURL = {};
 
-function broadcast(url, message) {
+let _lidarConnection = null;
+let _lineConnection = null;
+
+const broadcast =  (url, message) => {
   const clients = clientsByURL[url] || [];
   clients.forEach((client) => {
       if (client.readyState === client.OPEN) {
@@ -8,7 +13,56 @@ function broadcast(url, message) {
       }
   });
 }
-module.exports = (app) => {
+const wsRoute = (app) => {
+    app.ws('/ws/connect/lidar',(ws, req) => {
+        ws.on('message', (msg) => {
+            if(_lidarConnection) return ws.send("ROSLib already connected");
+
+            if(!msg.startsWith("ws://")) return ws.send("Please provide websocket address");
+            
+            ws.send("Trying to connect");
+            
+            let rosLidar = new ROSLIB.Ros({
+                url: msg,
+            });
+            
+            rosLidar.on('connection', () => {
+                _lidarConnection = rosLidar;
+                ws.send("ROSLib connection successful");
+
+                const my_topic_listener = new ROSLIB.Topic({
+                    rosLidar,
+                    name: "/my_topic",
+                    messageType: "std_msgs/String",
+                });
+
+                my_topic_listener.ros = rosLidar;
+                
+                my_topic_listener.subscribe((message) => {
+                    console.log(message.data);
+                    broadcast('dashboard-lidar', message.data)
+                    ws.send("Dari ros "+message.data);
+                });
+            });
+            rosLidar.on('error', (error) => {
+                _lidarConnection = null;
+                ws.send("ROSLib connection error "+error);
+            });
+            rosLidar.on('close', () => {
+                _lidarConnection = null;
+                ws.send("ROSLib connection closed");
+            });
+        });
+        ws.on('connection',() => {
+            console.log("connection");
+            if(_lidarConnection) ws.send("ROSLib connected");
+        });
+
+        ws.on('close', () => {
+            console.log("discon");
+        });
+    })
+
     app.ws('/ws/dashboard/:type', (ws, req) => {
         const { type } = req.params;
         url = "dashboard-"+type;
@@ -46,3 +100,5 @@ module.exports = (app) => {
         });
     });
 }
+
+module.exports = { broadcast, wsRoute }

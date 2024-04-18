@@ -14,6 +14,8 @@ const ws = require('express-ws');
 const dotenv = require("dotenv");
 const swaggerConfig = require("./app/config/swagger.config");
 const websocket = require("./app/ws/websocket");
+const taskListener = require("./app/ws/taskListener");
+const agvListener = require("./app/ws/agvListener");
 
 const app = express();
 
@@ -63,6 +65,8 @@ db.mongoose
   })
   .then(() => {
     console.log("Successfully connect to MongoDB.");
+    taskListener();
+    agvListener();
   })
   .catch(err => {
     console.error("Connection error", err);
@@ -71,7 +75,7 @@ db.mongoose
 
 authRoutes(app);
 userRoutes(app);
-websocket(app);
+websocket.wsRoute(app);
 agvRoutes(app);
 stationRoutes(app);
 

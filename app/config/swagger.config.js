@@ -24,7 +24,10 @@ module.exports = {
         {
           url: "https://sans-api-service.onrender.com/api/",
         },
+        {
+          url: "http://localhost:9000/api/",
+        },
       ],
     },
-    apis: ["./app/routes/*.js", "./app/models/*.js",],
+    apis: ["./app/routes/*.js", "./app/models/*.js","./app/ws/*.js",],
   };

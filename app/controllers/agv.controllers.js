@@ -34,6 +34,8 @@ exports.insertAgvData = async (req, res) => {
     agv.create({
         code: req.body.code,
         description: req.body.description,
+        ip: req.body.ip,
+        type: req.body.type,
     }).then((agv) => {
         res.send({ message: "AGV inserted", data: agv});
       })
@@ -65,6 +67,8 @@ exports.updateAgvData = (req, res) => {
 
             agvData.code = req.body.code || agvData.code;
             agvData.description = req.body.description || agvData.description;
+            agvData.ip = req.body.ip || agvData.ip;
+            agvData.type = req.body.type || agvData.type;
 
             agvData.save()
                 .then(updatedAgv => {
