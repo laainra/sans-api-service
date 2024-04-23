@@ -3,7 +3,6 @@ const ROSLIB = require("roslib/src/RosLib");
 const clientsByURL = {};
 
 let _lidarConnection = null;
-let _lineConnection = null;
 
 const broadcast =  (url, message) => {
   const clients = clientsByURL[url] || [];
@@ -13,6 +12,7 @@ const broadcast =  (url, message) => {
       }
   });
 }
+
 const wsRoute = (app) => {
     app.ws('/ws/connect/lidar',(ws, req) => {
         ws.on('message', (msg) => {
@@ -46,6 +46,7 @@ const wsRoute = (app) => {
             });
             rosLidar.on('error', (error) => {
                 _lidarConnection = null;
+                console.log(error);
                 ws.send("ROSLib connection error "+error);
             });
             rosLidar.on('close', () => {
@@ -92,7 +93,11 @@ const wsRoute = (app) => {
         console.log(clientsByURL);
       
         ws.on('message', (msg) => {
-            broadcast(`dashboard-${url}`,msg)
+            let res = JSON.parse(msg)
+
+            if(res.type == "masuk") broadcast(`dashboard-${url}`,res.rfid)
+
+            else broadcast(`dashboard-${url}`,msg)
         });
       
         ws.on('close', () => {
