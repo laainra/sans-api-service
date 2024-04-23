@@ -8,7 +8,10 @@ exports.getAllStationData = (req, res) => {
             if (!station) {
                 res.status(401).json({ message: "station not found" });
             }
-            res.status(200).json({ message: "Success", data:station });
+            else{
+
+                res.status(200).json({ message: "Success", data:station });
+            }
         })
         .catch(err => {
             res.status(500).json({ message: err.message });
@@ -23,7 +26,10 @@ exports.findStationData = (req, res) => {
             if (!stationData) {
                 res.status(401).json({ message: "station not found" });
             }
-            res.status(200).json({ message: "Success", data:stationData });
+            else{
+                res.status(200).json({ message: "Success", data:stationData });
+
+            }
         })
         .catch(err => {
             res.status(500).json({ message: err.message });
@@ -65,20 +71,21 @@ exports.updateStationData = (req, res) => {
             if (!stationData) {
                 res.status(401).json({ message: "station not found" });
             }
-
-            stationData.code = req.body.code || stationData.code;
-            stationData.coordinate = req.body.coordinate || stationData.coordinate;
-            stationData.time_departed = req.body.time_departed || stationData.time_departed;
-            stationData.time_arrived = req.body.time_arrived || stationData.time_arrived;
-            stationData.status = req.body.status || stationData.status;
-
-            stationData.save()
-                .then(updatedstation => {
-                    res.status(200).json({ message: "station data updated successfully", data: updatedstation });
-                })
-                .catch(err => {
-                    res.status(500).json({ message: err.message });
-                });
+            else{
+                stationData.code = req.body.code || stationData.code;
+                stationData.coordinate = req.body.coordinate || stationData.coordinate;
+                stationData.time_departed = req.body.time_departed || stationData.time_departed;
+                stationData.time_arrived = req.body.time_arrived || stationData.time_arrived;
+                stationData.status = req.body.status || stationData.status;
+    
+                stationData.save()
+                    .then(updatedstation => {
+                        res.status(200).json({ message: "station data updated successfully", data: updatedstation });
+                    })
+                    .catch(err => {
+                        res.status(500).json({ message: err.message });
+                    });
+            }
         })
         .catch(err => {
             res.status(500).json({ message: err.message });

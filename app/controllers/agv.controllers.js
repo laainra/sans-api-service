@@ -8,6 +8,7 @@ exports.getAllAgvData = (req, res) => {
             if (!agv) {
                 res.status(401).json({ message: "agv not found" });
             }
+            else
             res.status(200).json({ message: "Success", data:agv });
         })
         .catch(err => {
@@ -23,6 +24,7 @@ exports.findAgvData = (req, res) => {
             if (!agvData) {
                 res.status(401).json({ message: "agv not found" });
             }
+            else
             res.status(200).json({ message: "Success", data:agvData });
         })
         .catch(err => {
@@ -64,19 +66,20 @@ exports.updateAgvData = (req, res) => {
             if (!agvData) {
                 res.status(401).json({ message: "agv not found" });
             }
-
-            agvData.code = req.body.code || agvData.code;
-            agvData.description = req.body.description || agvData.description;
-            agvData.ip = req.body.ip || agvData.ip;
-            agvData.type = req.body.type || agvData.type;
-
-            agvData.save()
-                .then(updatedAgv => {
-                    res.status(200).json({ message: "Agv data updated successfully", data: updatedAgv });
-                })
-                .catch(err => {
-                    res.status(500).json({ message: err.message });
-                });
+            else{
+                agvData.code = req.body.code || agvData.code;
+                agvData.description = req.body.description || agvData.description;
+                agvData.ip = req.body.ip || agvData.ip;
+                agvData.type = req.body.type || agvData.type;
+    
+                agvData.save()
+                    .then(updatedAgv => {
+                        res.status(200).json({ message: "Agv data updated successfully", data: updatedAgv });
+                    })
+                    .catch(err => {
+                        res.status(500).json({ message: err.message });
+                    });
+            }
         })
         .catch(err => {
             res.status(500).json({ message: err.message });

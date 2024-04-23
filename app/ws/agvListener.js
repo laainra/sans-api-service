@@ -14,7 +14,6 @@ module.exports = function AGVListener(){
         broadcast(agv.type, JSON.stringify(type));
     });
     
-    // Handle errors
     changeStream.on('error', (err) => {
         console.error('Change stream error:', err);
     });

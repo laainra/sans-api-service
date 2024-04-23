@@ -46,7 +46,6 @@ module.exports = function taskListener(){
         broadcast('task-'+agv.type, JSON.stringify(tasks));
     });
     
-    // Handle errors
     changeStream.on('error', (err) => {
         console.error('Change stream error:', err);
     });
