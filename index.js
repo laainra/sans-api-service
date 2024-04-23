@@ -22,10 +22,10 @@ const app = express();
 dotenv.config()
 
 var corsOptions = {
-  origin: "http://localhost:5174",
+  origin: "http://localhost:5173",
 };
 
-app.use(cors());
+app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
 
