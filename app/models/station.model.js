@@ -2,30 +2,15 @@
  * @swagger
  * components:
  *   schemas:
- *     Coordinate:
- *       type: object
- *       required:
- *         - x
- *         - y
- *       properties:
- *         x:
- *           type: double
- *         y:
- *           type: double
- *       example:
- *         x: 10.7
- *         y: 0.1
  *     Station:
  *       type: object
  *       required:
  *         - code
- *         - coordinate
  *         - status
+ *         - rfid
  *       properties:
  *         code:
  *           type: string
- *         coordinate:
- *           $ref: '#/components/schemas/Coordinate'
  *         status:
  *           type: string
  *         rfid:
@@ -38,15 +23,10 @@
 
 const mongoose = require("mongoose");
 
-const CoordinateSchema = new mongoose.Schema({
-    x: Number,
-    y: Number,
-}, { _id : false });
-
 const StationSchema = new mongoose.Schema({
     code: String,
-    coordinate: CoordinateSchema,
     status: String,
+    rfid: String,
 }, { collection: 'stations' });
 
 const Station = mongoose.model('Station', StationSchema);
