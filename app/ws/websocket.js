@@ -1,4 +1,7 @@
 const ROSLIB = require("roslib/src/RosLib");
+const AGV = require("../models/agv.model");
+const Station = require("../models/station.model");
+const Task = require("../models/task.model");
 
 const clientsByURL = {};
 
@@ -93,17 +96,47 @@ const wsRoute = (app) => {
         console.log(clientsByURL);
       
         ws.on('message', (msg) => {
-            let res = JSON.parse(msg)
+            try{
+                let res = JSON.parse(msg)
 
-            if(res.type == "masuk") broadcast(`dashboard-${url}`,res.rfid)
+                if(res['payload']) updateTaskLine(res['payload']);
 
-            else broadcast(`dashboard-${url}`,msg)
+                else broadcast(`dashboard-${url}`,res)
+            }
+            catch(e){
+                console.log(e);
+            }
         });
       
         ws.on('close', () => {
             clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
         });
     });
+}
+
+async function updateTaskLine (rfid) {
+    let agv = await AGV.findOne({type : 'line'})
+    let newStation = await Station.findOne({rfid : rfid})
+    
+    // kalo ga ketemu return
+    if(!agv || !newStation) return
+    
+    let task = await Task.findOne({station_to : null, agv : agv})
+
+    // jadi station end
+    if(task){
+        task.station_to = newStation
+        task.time_end = Date.now()
+        task.save()
+    }
+    // jadi station start
+    else{
+        await Task.create({
+            agv : agv,
+            station_from : newStation,
+            time_start : Date.now()
+        })
+    }
 }
 
 module.exports = { broadcast, wsRoute }

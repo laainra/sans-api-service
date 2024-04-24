@@ -3,9 +3,9 @@ const AGV = require("./agv.model");
 const Station = require("./station.model");
 
 const TaskSchema = new mongoose.Schema({
-    agv : String,
-    station_from: String,
-    station_to: String,
+    agv : AGV.schema,
+    station_from: Station.schema,
+    station_to: Station.schema,
     time_start: Date,
     time_end: Date,
     

@@ -27,7 +27,7 @@
  */
 
 const AGV = require("../models/agv.model");
-const Task = require("../models/task");
+const Task = require("../models/task.model");
 const { broadcast } = require("./websocket");
 
 module.exports = function taskListener(){
@@ -37,13 +37,10 @@ module.exports = function taskListener(){
         console.log(change);
 
         let task = await Task.findById(change.documentKey._id)
-        let agv = await AGV.findById(task.agv)
-        let agvs = await AGV.find({type: agv.type})
         
-        let agvIds = agvs.map(x => x._id)
-        let tasks = await Task.find({agv : { $in : agvIds}})
+        let tasks = await Task.find({'agv.type' : task.agv.type})
 
-        broadcast('task-'+agv.type, JSON.stringify(tasks));
+        broadcast('task-'+task.agv.type, JSON.stringify(tasks));
     });
     
     changeStream.on('error', (err) => {
