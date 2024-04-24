@@ -53,6 +53,10 @@ app.get("/", (req, res) => {
   res.redirect('/docs')
 });
 
+app.get("/test", (req, res) => {
+  res.send("masuk")
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
