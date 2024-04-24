@@ -7,10 +7,10 @@ const userRoutes = require("./app/routes/user.routes");
 const agvRoutes = require("./app/routes/agv.routes");
 const stationRoutes = require("./app/routes/station.routes");
 const dbConfig = require("./app/config/db.configs");
-const bodyParser = require('body-parser');
-const swaggerUi = require('swagger-ui-express');
+const bodyParser = require("body-parser");
+const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
-const ws = require('express-ws');
+const ws = require("express-ws");
 const dotenv = require("dotenv");
 const swaggerConfig = require("./app/config/swagger.config");
 const websocket = require("./app/ws/websocket");
@@ -19,7 +19,7 @@ const agvListener = require("./app/ws/agvListener");
 
 const app = express();
 
-dotenv.config()
+dotenv.config();
 
 var corsOptions = {
   origin: "http://localhost:5173",
@@ -35,26 +35,26 @@ const wss = ws(app);
 
 app.use(
   cookieSession({
-      name: "agv-session",
-      secret: "SANS_COOKIE_ZXNBV",
-      httpOnly: true
+    name: "agv-session",
+    secret: "SANS_COOKIE_ZXNBV",
+    httpOnly: true,
   })
 );
 
 const specs = swaggerJsdoc(swaggerConfig);
 
-app.use(
-  "/docs",
-  swaggerUi.serve,
-  swaggerUi.setup(specs, { explorer: true })
-);
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
 
 app.get("/", (req, res) => {
-  res.redirect('/docs')
+  res.redirect("/docs");
 });
 
 app.get("/test", (req, res) => {
-  res.send("masuk")
+  res.send("masuk");
+});
+
+app.get("/try", (req, res) => {
+  res.send("ini halaman baru");
 });
 
 const PORT = process.env.PORT || 3000;
@@ -63,16 +63,19 @@ app.listen(PORT, () => {
 });
 
 db.mongoose
-  .connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${dbConfig.HOST}/${dbConfig.DB}`, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
+  .connect(
+    `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${dbConfig.HOST}/${dbConfig.DB}`,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
   .then(() => {
     console.log("Successfully connect to MongoDB.");
     taskListener();
     agvListener();
   })
-  .catch(err => {
+  .catch((err) => {
     console.error("Connection error", err);
     process.exit();
   });
