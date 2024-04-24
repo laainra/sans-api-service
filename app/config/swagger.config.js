@@ -27,6 +27,9 @@ module.exports = {
         {
           url: "http://localhost:9000/api/",
         },
+        {
+          url: "https://sans-agv.azurewebsites.net/api/",
+        },
       ],
     },
     apis: ["./app/routes/*.js", "./app/models/*.js","./app/ws/*.js",],

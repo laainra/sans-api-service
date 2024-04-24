@@ -136,7 +136,7 @@ const wsRoute = (app) => {
 }
 
 async function updateTaskLine (rfid) {
-    console.log("mausk");
+    console.log("masuk");
     let agv = await AGV.findOne({type : 'line'})
     let newStation = await Station.findOne({rfid : rfid})
     
@@ -148,14 +148,14 @@ async function updateTaskLine (rfid) {
     console.log("nyari task");
     // jadi station end
     if(task){
-        console.log("task ktemeu");
+        console.log("task ketemu");
         task.station_to = newStation
         task.time_end = Date.now()
         task.save()
     }
     // jadi station start
     else{
-        console.log("ga ktemeu");
+        console.log("ga ketemu");
         await Task.create({
             agv : agv,
             station_from : newStation,
