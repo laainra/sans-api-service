@@ -54,7 +54,7 @@ app.get("/test", (req, res) => {
 });
 
 app.get("/try", (req, res) => {
-  res.send("ini halaman baru");
+  res.send("ini halaman baruuuuu");
 });
 
 const PORT = process.env.PORT || 3000;
