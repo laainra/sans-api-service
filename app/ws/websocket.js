@@ -42,14 +42,12 @@ const wsRoute = (app) => {
                 my_topic_listener.ros = rosLidar;
                 
                 my_topic_listener.subscribe((message) => {
-                    console.log(message.data);
                     broadcast('dashboard-lidar', message.data)
                     ws.send("Dari ros "+message.data);
                 });
             });
             rosLidar.on('error', (error) => {
                 _lidarConnection = null;
-                console.log(error);
                 ws.send("ROSLib connection error "+error);
             });
             rosLidar.on('close', () => {
@@ -67,6 +65,31 @@ const wsRoute = (app) => {
         });
     })
 
+    app.ws('/ws/task/:type', async (ws, req) => {
+        const { type } = req.params;
+        url = "task-"+type;
+
+        if (!clientsByURL[url]) {
+            clientsByURL[url] = [];
+        }
+        clientsByURL[url].push(ws);
+      
+
+        if (ws.readyState === ws.OPEN) {
+            let tasks = await Task.find({'agv.type' : type})
+            
+            ws.send(JSON.stringify(tasks))
+        }
+        
+        ws.on('open', async (msg) => {
+        
+        });
+      
+        ws.on('close', () => {
+            clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
+        });
+    });
+
     app.ws('/ws/dashboard/:type', (ws, req) => {
         const { type } = req.params;
         url = "dashboard-"+type;
@@ -75,7 +98,6 @@ const wsRoute = (app) => {
             clientsByURL[url] = [];
         }
         clientsByURL[url].push(ws);
-        console.log(clientsByURL);
       
         ws.on('message', (msg) => {
             broadcast(type,msg)
@@ -93,7 +115,6 @@ const wsRoute = (app) => {
             clientsByURL[url] = [];
         }
         clientsByURL[url].push(ws);
-        console.log(clientsByURL);
       
         ws.on('message', (msg) => {
             try{
