@@ -28,9 +28,12 @@
  *           $ref: '#/components/schemas/Coordinate'
  *         status:
  *           type: string
+ *         rfid:
+ *           type: string
  *       example:
  *         code: ST-A
  *         status: 20.7,8.5
+ *         rfid: 6363E6E3
  */
 
 const mongoose = require("mongoose");

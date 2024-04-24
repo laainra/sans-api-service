@@ -38,6 +38,8 @@ module.exports = function taskListener(){
 
         let task = await Task.findById(change.documentKey._id)
         
+        if(!task) return
+        
         let tasks = await Task.find({'agv.type' : task.agv.type})
 
         broadcast('task-'+task.agv.type, JSON.stringify(tasks));
