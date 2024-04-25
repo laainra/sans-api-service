@@ -7,163 +7,158 @@ const clientsByURL = {};
 
 let _lidarConnection = null;
 
-const broadcast =  (url, message) => {
+const broadcast = (url, message) => {
   const clients = clientsByURL[url] || [];
   clients.forEach((client) => {
-      if (client.readyState === client.OPEN) {
-          client.send(message);
-      }
+    if (client.readyState === client.OPEN) {
+      client.send(message);
+    }
   });
-}
+};
 
 const wsRoute = (app) => {
-    app.ws('/ws/connect/lidar',(ws, req) => {
-        ws.on('message', (msg) => {
-            if(_lidarConnection) return ws.send("ROSLib already connected");
+  app.ws("/ws/connect/lidar", (ws, req) => {
+    ws.on("message", (msg) => {
+      if (_lidarConnection) return ws.send("ROSLib already connected");
 
-            if(!msg.startsWith("ws://")) return ws.send("Please provide websocket address");
-            
-            ws.send("Trying to connect");
-            
-            let rosLidar = new ROSLIB.Ros({
-                url: msg,
-            });
-            
-            rosLidar.on('connection', () => {
-                _lidarConnection = rosLidar;
-                ws.send("ROSLib connection successful");
+      if (!msg.startsWith("ws://"))
+        return ws.send("Please provide websocket address");
 
-                const my_topic_listener = new ROSLIB.Topic({
-                    rosLidar,
-                    name: "/my_topic",
-                    messageType: "std_msgs/String",
-                });
+      ws.send("Trying to connect");
 
-                my_topic_listener.ros = rosLidar;
-                
-                my_topic_listener.subscribe((message) => {
-                    broadcast('dashboard-lidar', message.data)
-                    ws.send("Dari ros "+message.data);
-                });
-            });
-            rosLidar.on('error', (error) => {
-                _lidarConnection = null;
-                ws.send("ROSLib connection error "+error);
-            });
-            rosLidar.on('close', () => {
-                _lidarConnection = null;
-                ws.send("ROSLib connection closed");
-            });
-        });
-        ws.on('connection',() => {
-            console.log("connection");
-            if(_lidarConnection) ws.send("ROSLib connected");
+      let rosLidar = new ROSLIB.Ros({
+        url: msg,
+      });
+
+      rosLidar.on("connection", () => {
+        _lidarConnection = rosLidar;
+        ws.send("ROSLib connection successful");
+
+        const my_topic_listener = new ROSLIB.Topic({
+          rosLidar,
+          name: "/my_topic",
+          messageType: "std_msgs/String",
         });
 
-        ws.on('close', () => {
-            console.log("discon");
-        });
-    })
+        my_topic_listener.ros = rosLidar;
 
-    app.ws('/ws/task/:type', async (ws, req) => {
-        const { type } = req.params;
-        url = "task-"+type;
-
-        if (!clientsByURL[url]) {
-            clientsByURL[url] = [];
-        }
-        clientsByURL[url].push(ws);
-      
-
-        if (ws.readyState === ws.OPEN) {
-            let tasks = await Task.find({'agv.type' : type})
-            
-            ws.send(JSON.stringify(tasks))
-        }
-        
-        ws.on('open', async (msg) => {
-        
+        my_topic_listener.subscribe((message) => {
+          broadcast("dashboard-lidar", message.data);
+          ws.send("Dari ros " + message.data);
         });
-      
-        ws.on('close', () => {
-            clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
-        });
+      });
+      rosLidar.on("error", (error) => {
+        _lidarConnection = null;
+        ws.send("ROSLib connection error " + error);
+      });
+      rosLidar.on("close", () => {
+        _lidarConnection = null;
+        ws.send("ROSLib connection closed");
+      });
+    });
+    ws.on("connection", () => {
+      console.log("connection");
+      if (_lidarConnection) ws.send("ROSLib connected");
+    });
+    ws.on("close", () => {
+      console.log("discon");
+    });
+  });
+
+  app.ws("/ws/task/:type", async (ws, req) => {
+    const { type } = req.params;
+    url = "task-" + type;
+
+    if (!clientsByURL[url]) {
+      clientsByURL[url] = [];
+    }
+    clientsByURL[url].push(ws);
+
+    if (ws.readyState === ws.OPEN) {
+      let tasks = await Task.find({ "agv.type": type });
+
+      ws.send(JSON.stringify(tasks));
+    }
+
+    ws.on("open", async (msg) => {});
+
+    ws.on("close", () => {
+      clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
+    });
+  });
+
+  app.ws("/ws/dashboard/:type", (ws, req) => {
+    const { type } = req.params;
+    url = "dashboard-" + type;
+
+    if (!clientsByURL[url]) {
+      clientsByURL[url] = [];
+    }
+    clientsByURL[url].push(ws);
+
+    ws.on("message", (msg) => {
+      broadcast(type, msg);
     });
 
-    app.ws('/ws/dashboard/:type', (ws, req) => {
-        const { type } = req.params;
-        url = "dashboard-"+type;
+    ws.on("close", () => {
+      clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
+    });
+  });
 
-        if (!clientsByURL[url]) {
-            clientsByURL[url] = [];
-        }
-        clientsByURL[url].push(ws);
-      
-        ws.on('message', (msg) => {
-            broadcast(type,msg)
-        });
-      
-        ws.on('close', () => {
-            clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
-        });
+  app.ws("/ws/:url", (ws, req) => {
+    const { url } = req.params;
+
+    if (!clientsByURL[url]) {
+      clientsByURL[url] = [];
+    }
+    clientsByURL[url].push(ws);
+
+    ws.on("message", (msg) => {
+      try {
+        let res = JSON.parse(msg);
+
+        if (res["payload"]) updateTaskLine(res["payload"]);
+        else broadcast(`dashboard-${url}`, res);
+      } catch (e) {
+        console.log(e);
+      }
     });
 
-    app.ws('/ws/:url', (ws, req) => {
-        const { url } = req.params;
-        
-        if (!clientsByURL[url]) {
-            clientsByURL[url] = [];
-        }
-        clientsByURL[url].push(ws);
-      
-        ws.on('message', (msg) => {
-            try{
-                let res = JSON.parse(msg)
-
-                if(res['payload']) updateTaskLine(res['payload']);
-
-                else broadcast(`dashboard-${url}`,res)
-            }
-            catch(e){
-                console.log(e);
-            }
-        });
-      
-        ws.on('close', () => {
-            clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
-        });
+    ws.on("close", () => {
+      clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
     });
+  });
+};
+
+async function updateTaskLine(rfid) {
+  console.log("masuk");
+  let agv = await AGV.findOne({ type: "line" });
+  let newStation = await Station.findOne({ rfid: rfid });
+
+  console.log("nyari agv");
+  // kalo ga ketemu return
+  if (!agv || !newStation) return;
+  console.log("agv ketemu");
+  let task = await Task.findOne({ station_to: null, agv: agv });
+  console.log("nyari task");
+  // jadi station end
+  if (task) {
+    console.log("task ketemu");
+    task.station_to = newStation;
+    task.time_end = Date.now();
+    task.save();
+  }
+  // jadi station start
+  else {
+    console.log("ga ketemu");
+    await Task.create({
+      agv: agv,
+      station_from: newStation,
+      time_start: Date.now(),
+    });
+  }
 }
 
-async function updateTaskLine (rfid) {
-    console.log("masuk");
-    let agv = await AGV.findOne({type : 'line'})
-    let newStation = await Station.findOne({rfid : rfid})
-    
-    console.log("nyari agv");
-    // kalo ga ketemu return
-    if(!agv || !newStation) return
-    console.log("agv ketemu");
-    let task = await Task.findOne({station_to : null, agv : agv})
-    console.log("nyari task");
-    // jadi station end
-    if(task){
-        console.log("task ketemu");
-        task.station_to = newStation
-        task.time_end = Date.now()
-        task.save()
-    }
-    // jadi station start
-    else{
-        console.log("ga ketemu");
-        await Task.create({
-            agv : agv,
-            station_from : newStation,
-            time_start : Date.now()
-        })
-    }
-}
-
-module.exports = { broadcast, wsRoute }
+module.exports = { broadcast, wsRoute };
 
 // test
