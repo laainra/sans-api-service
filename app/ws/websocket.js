@@ -162,7 +162,6 @@ async function updateTaskLine (rfid) {
             time_start : Date.now()
         })
     }
-    
 }
 
 module.exports = { broadcast, wsRoute }
