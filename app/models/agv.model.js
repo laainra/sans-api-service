@@ -8,7 +8,7 @@
  *         - code
  *         - description
  *         - ip
- *         - device_type
+ *         - type
  *       properties:
  *         code:
  *           type: string
@@ -16,13 +16,13 @@
  *           type: string
  *         ip:
  *           type: string
- *         device_type:
+ *         type:
  *           type: string
  *       example:
  *         code: qaz
  *         description: qaz
  *         ip: ws://172.29.122.58:9090
- *         device_type: lidar
+ *         type: lidar
  */
 
 const mongoose = require("mongoose");
@@ -30,7 +30,7 @@ const mongoose = require("mongoose");
 const AGVSchema = new mongoose.Schema({
     code: String,
     description: String,
-    device_type: String,
+    type: String,
     ip: String,
 }, { collection: 'agvs' });
 
