@@ -36,7 +36,7 @@ exports.insertAgvData = async (req, res) => {
       code: req.body.code,
       description: req.body.description,
       ip: req.body.ip,
-      device_type: req.body.device_type,
+      type: req.body.type,
     })
     .then((agv) => {
       res.send({ message: "AGV inserted", data: agv });
@@ -76,12 +76,10 @@ exports.updateAgvData = (req, res) => {
         agvData
           .save()
           .then((updatedAgv) => {
-            res
-              .status(200)
-              .json({
-                message: "Agv data updated successfully",
-                data: updatedAgv,
-              });
+            res.status(200).json({
+              message: "Agv data updated successfully",
+              data: updatedAgv,
+            });
           })
           .catch((err) => {
             res.status(500).json({ message: err.message });

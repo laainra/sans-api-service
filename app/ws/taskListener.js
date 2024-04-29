@@ -5,7 +5,7 @@
  * /ws/task-{type}:
  *   get:
  *     security:
- *      - Bearer: [] 
+ *      - Bearer: []
  *     summary: websocket tampil tasks agv sesuai tipe (line/lidar)
  *     tags: [Websocket]
  *     responses:
@@ -16,7 +16,7 @@
  * /ws/agv-{id}:
  *   get:
  *     security:
- *      - Bearer: [] 
+ *      - Bearer: []
  *     summary: websocket tampil data agv sesuai id
  *     tags: [Websocket]
  *     responses:
@@ -30,23 +30,22 @@ const AGV = require("../models/agv.model");
 const Task = require("../models/task.model");
 const { broadcast } = require("./websocket");
 
-module.exports = function taskListener(){
-    const changeStream = Task.watch();
+module.exports = function taskListener() {
+  const changeStream = Task.watch();
 
-    changeStream.on('change', async (change) => {
-        console.log(change);
+  changeStream.on("change", async (change) => {
+    console.log(change);
 
-        let task = await Task.findById(change.documentKey._id)
-        
-        if(!task) return
-        
-        let tasks = await Task.find({'agv.type' : task.agv.type})
+    let task = await Task.findById(change.documentKey._id);
 
-        broadcast('task-'+task.agv.type, JSON.stringify(tasks));
-    });
-    
-    changeStream.on('error', (err) => {
-        console.error('Change stream error:', err);
-    });
-    
-}
+    if (!task) return;
+
+    let tasks = await Task.find({ "agv.type": task.agv.type });
+
+    broadcast("task-" + task.agv.type, JSON.stringify(tasks));
+  });
+
+  changeStream.on("error", (err) => {
+    console.error("Change stream error:", err);
+  });
+};

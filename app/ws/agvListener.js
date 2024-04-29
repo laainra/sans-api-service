@@ -11,13 +11,13 @@ module.exports = function AGVListener() {
     broadcast("agv-" + change.documentKey._id, JSON.stringify(agv));
 
     try {
-      let code = null; 
+      let type= null; 
       if (agv) {
-        code = await AGV.find({ code: agv.code });
+        type= await AGV.find({ type: agv.type});
       }
-      broadcast(agv.code, JSON.stringify(code)); 
+      broadcast(agv.type, JSON.stringify(type)); 
     } catch (error) {
-      console.error("Error finding AGV by code:", error);
+      console.error("Error finding AGV by type:", error);
     }
   });
 
