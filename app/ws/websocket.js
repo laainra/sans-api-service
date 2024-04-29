@@ -139,7 +139,7 @@ const wsRoute = (app) => {
         if (res["payload"]) updateTaskLine(res["payload"]);
         else broadcast(`dashboard-${url}`, res);
       } catch (e) {
-        console.log(e);
+        console.log("AWD");
       }
     });
 
@@ -150,31 +150,35 @@ const wsRoute = (app) => {
 };
 
 async function updateTaskLine(rfid) {
-  console.log("masuk");
-  let agv = await AGV.findOne({ type: "line" });
-  let newStation = await Station.findOne({ rfid: rfid });
+  try {
+    console.log("masuk");
+    let agv = await AGV.findOne({ type: "line" });
+    let newStation = await Station.findOne({ rfid: rfid });
 
-  console.log("nyari agv");
-  // kalo ga ketemu return
-  if (!agv || !newStation) return;
-  console.log("agv ketemu");
-  let task = await Task.findOne({ station_to: null, agv: agv });
-  console.log("nyari task");
-  // jadi station end
-  if (task) {
-    console.log("task ketemu");
-    task.station_to = newStation;
-    task.time_end = Date.now();
-    task.save();
-  }
-  // jadi station start
-  else {
-    console.log("ga ketemu");
-    await Task.create({
-      agv: agv,
-      station_from: newStation,
-      time_start: Date.now(),
-    });
+    console.log("nyari agv");
+    // kalo ga ketemu return
+    if (!agv || !newStation) return;
+    console.log("agv ketemu");
+    let task = await Task.findOne({ station_to: null, agv: agv });
+    console.log("nyari task");
+    // jadi station end
+    if (task) {
+      console.log("task ketemu");
+      task.station_to = newStation;
+      task.time_end = Date.now();
+      task.save();
+    }
+    // jadi station start
+    else {
+      console.log("ga ketemu");
+      await Task.create({
+        agv: agv,
+        station_from: newStation,
+        time_start: Date.now(),
+      });
+    }
+  } catch (e) {
+    console.log(e);
   }
 }
 

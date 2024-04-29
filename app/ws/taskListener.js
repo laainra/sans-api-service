@@ -34,7 +34,7 @@ module.exports = function taskListener() {
   const changeStream = Task.watch();
 
   changeStream.on("change", async (change) => {
-    console.log(change);
+    // console.log(change);
 
     let task = await Task.findById(change.documentKey._id);
 
@@ -46,6 +46,6 @@ module.exports = function taskListener() {
   });
 
   changeStream.on("error", (err) => {
-    console.error("Change stream error:", err);
+    // console.error("Change stream error:", err);
   });
 };

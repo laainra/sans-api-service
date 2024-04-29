@@ -11,17 +11,17 @@ module.exports = function AGVListener() {
     broadcast("agv-" + change.documentKey._id, JSON.stringify(agv));
 
     try {
-      let type= null; 
+      let type = null;
       if (agv) {
-        type= await AGV.find({ type: agv.type});
+        type = await AGV.find({ type: agv?.type });
       }
-      broadcast(agv.type, JSON.stringify(type)); 
+      broadcast(agv?.type, JSON.stringify(type));
     } catch (error) {
-      console.error("Error finding AGV by type:", error);
+      // console.error("Error finding AGV by type:", error);
     }
   });
 
   changeStream.on("error", (err) => {
-    console.error("Change stream error:", err);
+    // console.error("Change stream error:", err);
   });
 };

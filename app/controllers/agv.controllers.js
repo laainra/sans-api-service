@@ -31,6 +31,7 @@ exports.findAgvData = (req, res) => {
 };
 
 exports.insertAgvData = async (req, res) => {
+  console.log(res.body)
   agv
     .create({
       code: req.body.code,
