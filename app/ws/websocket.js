@@ -87,6 +87,25 @@ const wsRoute = (app) => {
     });
   });
 
+  app.ws("/ws/test/:url", (ws, req) => {
+    const { url } = req.params;
+
+    if (!clientsByURL[url]) {
+      clientsByURL[url] = [];
+    }
+    clientsByURL[url].push(ws);
+
+    ws.on("message", (msg) => {
+      broadcast(`dashboard-${url}`, msg);
+    });
+
+    ws.on("open", async (msg) => {});
+
+    ws.on("close", () => {
+      clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
+    });
+  });
+
   app.ws("/ws/dashboard/:type", (ws, req) => {
     const { type } = req.params;
     url = "dashboard-" + type;
@@ -120,7 +139,7 @@ const wsRoute = (app) => {
         if (res["payload"]) updateTask(res["payload"], url);
         else broadcast(`dashboard-${url}`, res);
       } catch (e) {
-        console.log(e);
+        console.log("AWD");
       }
     });
 
@@ -135,28 +154,28 @@ async function updateTask(rfid, type) {
   let agv = await AGV.findOne({ type: type });
   let newStation = await Station.findOne({ rfid: rfid });
 
-  console.log("nyari agv");
-  // kalo ga ketemu return
-  if (!agv || !newStation) return;
-  console.log("agv ketemu");
-  let task = await Task.findOne({ station_to: null, agv: agv });
-  console.log("nyari task");
-  // jadi station end
-  if (task) {
-    console.log("task ketemu");
-    task.station_to = newStation;
-    task.time_end = Date.now();
-    task.save();
-  }
-  // jadi station start
-  else {
-    console.log("ga ketemu");
-    await Task.create({
-      agv: agv,
-      station_from: newStation,
-      time_start: Date.now(),
-    });
-  }
+    console.log("nyari agv");
+    // kalo ga ketemu return
+    if (!agv || !newStation) return;
+    console.log("agv ketemu");
+    let task = await Task.findOne({ station_to: null, agv: agv });
+    console.log("nyari task");
+    // jadi station end
+    if (task) {
+      console.log("task ketemu");
+      task.station_to = newStation;
+      task.time_end = Date.now();
+      task.save();
+    }
+    // jadi station start
+    else {
+      console.log("ga ketemu");
+      await Task.create({
+        agv: agv,
+        station_from: newStation,
+        time_start: Date.now(),
+      });
+    }
 }
 
 module.exports = { broadcast, wsRoute };

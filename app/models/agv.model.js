@@ -30,8 +30,8 @@ const mongoose = require("mongoose");
 const AGVSchema = new mongoose.Schema({
     code: String,
     description: String,
-    ip: String,
     type: String,
+    ip: String,
 }, { collection: 'agvs' });
 
 const AGV = mongoose.model('AGV', AGVSchema);

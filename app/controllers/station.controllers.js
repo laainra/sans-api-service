@@ -38,8 +38,8 @@ exports.insertStationData = async (req, res) => {
   station
     .create({
       code: req.body.code,
-      rfid: req.body.rfid,
       status: req.body.status,
+      rfid: req.body.rfid,
     })
     .then((station) => {
       res.send({ message: "station inserted", data: station });
