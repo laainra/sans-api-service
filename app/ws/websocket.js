@@ -117,7 +117,7 @@ const wsRoute = (app) => {
       try {
         let res = JSON.parse(msg);
 
-        if (res["payload"]) updateTaskLine(res["payload"]);
+        if (res["payload"]) updateTask(res["payload"], url);
         else broadcast(`dashboard-${url}`, res);
       } catch (e) {
         console.log(e);
@@ -130,9 +130,9 @@ const wsRoute = (app) => {
   });
 };
 
-async function updateTaskLine(rfid) {
+async function updateTask(rfid, type) {
   console.log("masuk");
-  let agv = await AGV.findOne({ type: "line" });
+  let agv = await AGV.findOne({ type: type });
   let newStation = await Station.findOne({ rfid: rfid });
 
   console.log("nyari agv");
