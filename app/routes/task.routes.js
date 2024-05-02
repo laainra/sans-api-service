@@ -6,6 +6,7 @@
  *   delete:
  *     security:
  *      - Bearer: [] 
+ *     tags: [Task]
  *     parameters:
  *      - in: path
  *        name: id
