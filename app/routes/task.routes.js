@@ -14,7 +14,7 @@
  *        schema:
  *          type: string
  * /task/{type}:
- *   get:
+ *   post:
  *     summary: get task data by type
  *     security:
  *      - Bearer: [] 
@@ -60,7 +60,7 @@ module.exports = function(app) {
     next();
   });
 
-  app.get(
+  app.post(
     "/api/task/:type",
     [authJwt],
     controller.getTaskData
