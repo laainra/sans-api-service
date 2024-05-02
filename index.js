@@ -16,6 +16,8 @@ const swaggerConfig = require("./app/config/swagger.config");
 const websocket = require("./app/ws/websocket");
 const taskListener = require("./app/ws/taskListener");
 const agvListener = require("./app/ws/agvListener");
+const Task = require("./app/models/task.model");
+const moment = require("moment/moment");
 
 const app = express();
 
@@ -74,6 +76,12 @@ db.mongoose
     console.log("Successfully connect to MongoDB.");
     taskListener();
     agvListener();
+
+    const today = moment().startOf('day')
+    Task.find({ time_start : {
+      $gte: today.toDate(),
+      $lte: moment(today).endOf('day').toDate()
+    } }).then((tasks) => console.log(tasks.length)).catch((err) => { console.error(err) });
   })
   .catch((err) => {
     console.error("Connection error", err);
