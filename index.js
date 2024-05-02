@@ -18,6 +18,7 @@ const taskListener = require("./app/ws/taskListener");
 const agvListener = require("./app/ws/agvListener");
 const Task = require("./app/models/task.model");
 const moment = require("moment/moment");
+const taskRoutes = require("./app/routes/task.routes");
 
 const app = express();
 
@@ -84,6 +85,7 @@ db.mongoose
 
 authRoutes(app);
 userRoutes(app);
+taskRoutes(app);
 websocket.wsRoute(app);
 agvRoutes(app);
 stationRoutes(app);
