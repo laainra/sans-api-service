@@ -14,7 +14,7 @@
  *        schema:
  *          type: string
  * /task/{type}:
- *   post:
+ *   get:
  *     summary: get task data by type
  *     security:
  *      - Bearer: [] 
