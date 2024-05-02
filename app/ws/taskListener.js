@@ -26,6 +26,7 @@
  *         description: Unauthenticated.
  */
 
+const moment = require("moment/moment");
 const AGV = require("../models/agv.model");
 const Task = require("../models/task.model");
 const { broadcast } = require("./websocket");
@@ -40,9 +41,11 @@ module.exports = function taskListener() {
 
     if (!task) return;
 
+    const today = moment().startOf('day')
+
     let tasks = await Task.find({ "agv.type": task.agv.type, time_start : {
-        $gte: new Date(), 
-        $lt: new Date()
+        $gte: today.toDate(),
+        $lte: moment(today).endOf('day').toDate()
     } });
 
     broadcast("task-" + task.agv.type, JSON.stringify(tasks));
