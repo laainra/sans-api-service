@@ -76,12 +76,6 @@ db.mongoose
     console.log("Successfully connect to MongoDB.");
     taskListener();
     agvListener();
-
-    const today = moment().startOf('day')
-    Task.find({ time_start : {
-      $gte: today.toDate(),
-      $lte: moment(today).endOf('day').toDate()
-    } }).then((tasks) => console.log(tasks.length)).catch((err) => { console.error(err) });
   })
   .catch((err) => {
     console.error("Connection error", err);

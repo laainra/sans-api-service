@@ -2,6 +2,7 @@ const ROSLIB = require("roslib/src/RosLib");
 const AGV = require("../models/agv.model");
 const Station = require("../models/station.model");
 const Task = require("../models/task.model");
+const moment = require("moment/moment");
 
 const clientsByURL = {};
 
@@ -75,7 +76,12 @@ const wsRoute = (app) => {
     clientsByURL[url].push(ws);
 
     if (ws.readyState === ws.OPEN) {
-      let tasks = await Task.find({ "agv.type": type });
+      const today = moment().startOf('day')
+
+      let tasks = await Task.find({ "agv.type": type,time_start : {
+        $gte: today.toDate(),
+        $lte: moment(today).endOf('day').toDate()
+    }  });
 
       ws.send(JSON.stringify(tasks));
     }
