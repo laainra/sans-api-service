@@ -62,7 +62,7 @@ module.exports = function(app) {
 
   app.post(
     "/api/task/:type",
-    [authJwt],
+    // [authJwt],
     controller.getTaskData
   );
 

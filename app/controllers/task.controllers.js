@@ -1,12 +1,15 @@
 const task = require("../models/task.model.js");
+const moment = require("moment/moment");
 
 exports.getTaskData = (req, res) => {
   const type = req.params.type;
-  const start_date = req.body.start_date;
-  const end_date = req.body.end_date;
-
+  const start_date = moment(new Date(req.body.start_date)).toDate() ;
+  const end_date = moment(new Date(req.body.end_date)).toDate() ;
+  console.log(start_date, end_date, type);
+  const today = moment().startOf('day')
+  console.log(today.toDate());
   task
-    .find( { type: type, time_start: { $gte: start_date, $lt: end_date } })
+    .find( { "agv.type": type, time_start: { $gte: start_date, $lt: end_date } })
     .then((task) => {
       console.log(task);
       if (!task) {
