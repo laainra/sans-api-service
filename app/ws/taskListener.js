@@ -40,7 +40,10 @@ module.exports = function taskListener() {
 
     if (!task) return;
 
-    let tasks = await Task.find({ "agv.type": task.agv.type });
+    let tasks = await Task.find({ "agv.type": task.agv.type, time_start : {
+        $gte: new Date(), 
+        $lt: new Date()
+    } });
 
     broadcast("task-" + task.agv.type, JSON.stringify(tasks));
   });
