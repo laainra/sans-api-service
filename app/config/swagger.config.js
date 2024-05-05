@@ -29,6 +29,9 @@ module.exports = {
       {
         url: "https://sans-api-service-bde60fbdfff2.herokuapp.com/api/",
       },
+      {
+        url: "https://sans-agv.azurewebsites.net/api/",
+      },
     ],
   },
   apis: ["./app/routes/*.js", "./app/models/*.js", "./app/ws/*.js"],
