@@ -63,7 +63,19 @@ module.exports = function(app) {
   app.post(
     "/api/task/:type",
     // [authJwt],
-    controller.getTaskData
+    controller.getTaskDataByDate
+  );
+
+  app.get(
+    "/api/task",
+    // [authJwt],
+    controller.getAllTaskData
+  );
+
+  app.post(
+    "/api/task",
+    // [authJwt],
+    controller.insertTask
   );
 
   app.delete("/api/task/:id", [authJwt], controller.deletetaskData);

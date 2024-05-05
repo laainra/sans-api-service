@@ -48,6 +48,7 @@ const wsRoute = (app) => {
           ws.send("Dari ros " + message.data);
         });
       });
+      
       rosLidar.on("error", (error) => {
         _lidarConnection = null;
         ws.send("ROSLib connection error " + error);
