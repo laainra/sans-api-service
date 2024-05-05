@@ -34,6 +34,18 @@ exports.getAllTaskData = (req, res) => {
     });
 };
 
+exports.getTaskDataByType = (req, res) => {
+
+  const type = req.params.type;
+  task.find({"agv.type": type})
+    .then((tasks) => {
+      res.status(200).json({ message: "Success", data: tasks });
+    })
+    .catch((err) => {
+      res.status(500).json({ message: err.message });
+    });
+};
+
 
 exports.insertTask = async (req, res) => {
   const agvCode = req.body.agv;
