@@ -16,9 +16,12 @@ const swaggerConfig = require("./app/config/swagger.config");
 const websocket = require("./app/ws/websocket");
 const taskListener = require("./app/ws/taskListener");
 const agvListener = require("./app/ws/agvListener");
+const waypointListener = require("./app/ws/waypointListener");
 const Task = require("./app/models/task.model");
 const moment = require("moment/moment");
 const taskRoutes = require("./app/routes/task.routes");
+const poseRoutes = require("./app/routes/pose.routes");
+const waypointRoutes = require("./app/routes/waypoint.routes");
 
 const app = express();
 
@@ -77,6 +80,7 @@ db.mongoose
     console.log("Successfully connect to MongoDB.");
     taskListener();
     agvListener();
+    waypointListener(ws);
   })
   .catch((err) => {
     console.error("Connection error", err);
@@ -89,5 +93,7 @@ taskRoutes(app);
 websocket.wsRoute(app);
 agvRoutes(app);
 stationRoutes(app);
+poseRoutes(app);
+waypointRoutes(app);
 
 // ngrok http --domain=tidy-terribly-boa.ngrok-free.app 80

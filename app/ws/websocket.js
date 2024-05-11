@@ -2,6 +2,7 @@ const ROSLIB = require("roslib/src/RosLib");
 const AGV = require("../models/agv.model");
 const Station = require("../models/station.model");
 const Task = require("../models/task.model");
+const Waypoint = require("../models/waypoint.model");
 const moment = require("moment/moment");
 
 const clientsByURL = {};
@@ -18,6 +19,7 @@ const broadcast = (url, message) => {
 };
 
 const wsRoute = (app) => {
+  // lidar routes
   app.ws("/ws/connect/lidar", (ws, req) => {
     ws.on("message", (msg) => {
       if (_lidarConnection) return ws.send("ROSLib already connected");
@@ -35,31 +37,60 @@ const wsRoute = (app) => {
         _lidarConnection = rosLidar;
         ws.send("ROSLib connection successful");
 
-        const my_topic_listener = new ROSLIB.Topic({
+        //getPose
+        const robotPoseTopic = new ROSLIB.Topic({
           ros: rosLidar,
-          name: "/chatter",
-          messageType: "std_msgs/String",
+          name: "/robot_pose",
+          messageType: "geometry_msgs/Pose",
         });
 
-        my_topic_listener.subscribe((message) => {
-          broadcast("dashboard-lidar", message.data);
-          ws.send("Dari ros " + message.data);
+        robotPoseTopic.subscribe((message) => {
+          const pose = {
+            position: {
+              x: message.position.x,
+              y: message.position.y,
+              z: message.position.z,
+            },
+            orientation: {
+              x: message.orientation.x,
+              y: message.orientation.y,
+              z: message.orientation.z,
+              w: message.orientation.w,
+            },
+          };
+
+          ws.send(JSON.stringify(pose));
+          console.log(pose);
         });
 
-        const kirimpesan = new ROSLIB.Topic({
-          ros: rosLidar,
-          name: "/kirimpesan",
-          messageType: "std_msgs/String",
-        });
-
-        ws.on("message", (psn) => {
-          const pesan = new ROSLIB.Message({
-            data: psn,
+        // sendPose
+        ws.on("message", (msg) => {
+          const poseTopic = new ROSLIB.Topic({
+            ros: rosLidar,
+            name: "/move_base_navi_simple/goal",
+            messageType: "geometry_msgs/Pose",
           });
 
-          kirimpesan.publish(pesan);
-          console.log("Pesan terbitkan ke /kirimpesan topik:", psn);
-          broadcast("dashboard-lidar", psn);
+          let pose = JSON.parse(msg);
+          console.log(pose);
+
+          if (pose !== null) {
+            const { position, orientation } = pose;
+            const { x, y } = position;
+            const { z, w } = orientation;
+
+            const poseMsg = new ROSLIB.Message({
+              header: { frame_id: "map" },
+              pose: { position: { x, y }, orientation: { z, w } },
+            });
+
+            poseTopic.publish(poseMsg);
+            ws.send(JSON.stringify(poseMsg));
+            updateWaypoint(pose);
+            // console.log("pose sent:", poseMsg.pose);
+          } else {
+            ws.send("give a right coordinates");
+          }
         });
       });
 
@@ -99,7 +130,7 @@ const wsRoute = (app) => {
       const today = moment().startOf("day");
 
       let tasks = await Task.find({
-        "agv.type": type,
+        // "agv.type": type,
         time_start: {
           $gte: today.toDate(),
           $lte: moment(today).endOf("day").toDate(),
@@ -108,25 +139,6 @@ const wsRoute = (app) => {
 
       ws.send(JSON.stringify(tasks));
     }
-
-    ws.on("open", async (msg) => {});
-
-    ws.on("close", () => {
-      clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
-    });
-  });
-
-  app.ws("/ws/test/:url", (ws, req) => {
-    const { url } = req.params;
-
-    if (!clientsByURL[url]) {
-      clientsByURL[url] = [];
-    }
-    clientsByURL[url].push(ws);
-
-    ws.on("message", (msg) => {
-      broadcast(`dashboard-${url}`, msg);
-    });
 
     ws.on("open", async (msg) => {});
 
@@ -176,14 +188,6 @@ const wsRoute = (app) => {
       clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
     });
   });
-  //test
-
-  app.ws("/ws/dashboard/robot", (ws, req) => {
-    ws.on("message", (msg) => {
-      console.log("Received message from dashboard:", msg);
-      broadcast("connect/robot", msg);
-    });
-  });
 };
 
 async function updateTask(rfid, type) {
@@ -214,106 +218,37 @@ async function updateTask(rfid, type) {
     });
   }
 }
+async function updateWaypoint(data) {
+  const { position, orientation } = data;
+  const { x, y } = position;
+  const { z, w } = orientation;
+
+  try {
+    let waypoints = await Waypoint.findOne({
+      "pose_to.x": x,
+      "pose_to.y": y,
+      "pose_to.z": z,
+      "pose_to.w": w,
+      status: "Unexecuted",
+    });
+
+    if (waypoints.length > 0) {
+      for (let i = 0; i < waypoints.length; i++) {
+        const waypoint = waypoints[i];
+        console.log("waypoint ketemu:", waypoint);
+
+        waypoint.status = "Finished";
+        waypoint.time_end = new Date();
+        await waypoint.save();
+
+        broadcast("/ws/connect/lidar", JSON.stringify({ waypoint }));
+      }
+    } else {
+      console.log("waypoint tidak ditemukan");
+    }
+  } catch (error) {
+    console.error("Error finding/updating waypoints:", error);
+  }
+}
 
 module.exports = { broadcast, wsRoute };
-
-// test
-
-// app.ws("/ws/connect/robot", (ws, req) => {
-//   let robotConnection = null;
-
-//   ws.on("message", (msg) => {
-//     if (robotConnection) return ws.send("ROSLib already connected");
-
-//     if (!msg.startsWith("ws://"))
-//       return ws.send("Please provide websocket address");
-
-//     ws.send("Trying to connect");
-
-//     let rosRobot = new ROSLIB.Ros({
-//       url: msg,
-//     });
-
-//     rosRobot.on("connection", () => {
-//       robotConnection = rosRobot;
-//       ws.send("ROSLib connection successful");
-
-//       const cmdVelTopic = new ROSLIB.Topic({
-//         ros: rosRobot,
-//         name: "/cmd_vel",
-//         messageType: "geometry_msgs/Twist",
-//       });
-
-//       const setSpeedService = new ROSLIB.Service({
-//         ros: rosRobot,
-//         name: "/set_speed",
-//         serviceType: "set_speed_msgs/SetSpeed",
-//       });
-
-//       ws.on("message", (msg) => {
-//         try {
-//           let data = JSON.parse(msg);
-
-//           if (data.command === "move") {
-//             let twist = new ROSLIB.Message({
-//               linear: {
-//                 x: data.linear.x,
-//                 y: data.linear.y,
-//                 z: data.linear.z,
-//               },
-//               angular: {
-//                 x: data.angular.x,
-//                 y: data.angular.y,
-//                 z: data.angular.z,
-//               },
-//             });
-//             cmdVelTopic.publish(twist);
-//           } else if (data.command === "set_speed") {
-//             let request = new ROSLIB.ServiceRequest({
-//               speed: data.speed,
-//             });
-//             setSpeedService.callService(request, (result) => {
-//               console.log("Speed set:", result.success);
-//             });
-//             ws.send("speed adjusted:", speed);
-//           } else if (data.command === "on") {
-//             // Example of publishing a message to power on the robot
-//             // Modify this according to your robot's interface
-//             // For example, if there's a topic to control power: /power_control
-//             const powerOnMsg = new ROSLIB.Message({ power: true });
-//             powerControlTopic.publish(powerOnMsg);
-//             ws.send("Robot powered on");
-//           } else if (data.command === "off") {
-//             // Example of publishing a message to power off the robot
-//             // Modify this according to your robot's interface
-//             // For example, if there's a topic to control power: /power_control
-//             const powerOffMsg = new ROSLIB.Message({ power: false });
-//             powerControlTopic.publish(powerOffMsg);
-//             ws.send("Robot powered off");
-//           }
-//         } catch (error) {
-//           console.error("Error processing message:", error);
-//         }
-//       });
-//     });
-
-//     rosRobot.on("error", (error) => {
-//       robotConnection = null;
-//       ws.send("ROSLib connection error " + error);
-//     });
-
-//     rosRobot.on("close", () => {
-//       robotConnection = null;
-//       ws.send("ROSLib connection closed");
-//     });
-//   });
-
-//   ws.on("connection", () => {
-//     console.log("connection");
-//     if (robotConnection) ws.send("ROSLib connected");
-//   });
-
-//   ws.on("close", () => {
-//     console.log("discon");
-//   });
-// });

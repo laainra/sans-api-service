@@ -43,12 +43,12 @@ module.exports = function taskListener() {
 
     const today = moment().startOf('day')
 
-    let tasks = await Task.find({ "agv.type": task.agv.type, time_start : {
+    let tasks = await Task.find({ time_start : {
         $gte: today.toDate(),
         $lte: moment(today).endOf('day').toDate()
     } });
 
-    broadcast("task-" + task.agv.type, JSON.stringify(tasks));
+    broadcast("task-line" ,JSON.stringify(tasks));
   });
 
   changeStream.on("error", (err) => {
