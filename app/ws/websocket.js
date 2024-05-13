@@ -21,6 +21,7 @@ const broadcast = (url, message) => {
 const wsRoute = (app) => {
   // lidar routes
   app.ws("/ws/connect/lidar", (ws, req) => {
+    let isOnProcess = false;
     ws.on("message", (msg) => {
       if (_lidarConnection) return ws.send("ROSLib already connected");
 
@@ -37,7 +38,7 @@ const wsRoute = (app) => {
         _lidarConnection = rosLidar;
         ws.send("ROSLib connection successful");
 
-        //getPose
+        // Subscribe to robot_pose topic
         const robotPoseTopic = new ROSLIB.Topic({
           ros: rosLidar,
           name: "/robot_pose",
@@ -49,11 +50,11 @@ const wsRoute = (app) => {
             position: {
               x: message.position.x,
               y: message.position.y,
-              z: message.position.z,
+              // z: message.position.z,
             },
             orientation: {
-              x: message.orientation.x,
-              y: message.orientation.y,
+              // x: message.orientation.x,
+              // y: message.orientation.y,
               z: message.orientation.z,
               w: message.orientation.w,
             },
@@ -61,49 +62,61 @@ const wsRoute = (app) => {
 
           ws.send(JSON.stringify(pose));
           console.log(pose);
+          updateWaypoint(pose);
         });
 
-        // sendPose
-        ws.on("message", (msg) => {
+        // Process incoming messages
+        ws.on("message", async (msg) => {
           const poseTopic = new ROSLIB.Topic({
             ros: rosLidar,
             name: "/move_base_navi_simple/goal",
             messageType: "geometry_msgs/Pose",
           });
 
-          let pose = JSON.parse(msg);
-          console.log(pose);
+          try {
+            const parsedMsg = JSON.parse(msg);
+            console.log(parsedMsg);
 
-          if (pose !== null) {
-            const { position, orientation } = pose;
-            const { x, y } = position;
-            const { z, w } = orientation;
+            if (parsedMsg && parsedMsg.position && parsedMsg.orientation) {
+              const { position, orientation } = parsedMsg;
+              const { x, y } = position;
+              const { z, w } = orientation;
 
-            const poseMsg = new ROSLIB.Message({
-              header: { frame_id: "map" },
-              pose: { position: { x, y }, orientation: { z, w } },
-            });
+              const poseMsg = new ROSLIB.Message({
+                header: { frame_id: "map" },
+                pose: { position: { x, y }, orientation: { z, w } },
+              });
 
-            poseTopic.publish(poseMsg);
-            ws.send(JSON.stringify(poseMsg));
-            updateWaypoint(pose);
-            // console.log("pose sent:", poseMsg.pose);
-          } else {
-            ws.send("give a right coordinates");
+              poseTopic.publish(poseMsg);
+              ws.send(JSON.stringify(poseMsg));
+            } else {
+              ws.send(
+                "Invalid message format: position and orientation are required"
+              );
+            }
+
+            if (parsedMsg.command === "start") {
+              const waypointId = parsedMsg.waypointId;
+              await startWaypoint(waypointId);
+              ws.send("Waypoint process started");
+            }
+          } catch (error) {
+            console.error("Error processing message:", error);
+            ws.send("Error processing message: " + error.message);
           }
         });
-      });
 
-      rosLidar.on("error", (error) => {
-        _lidarConnection = null;
-        console.log("error:", error);
-        ws.send("ROSLib connection error " + error);
-        console.log("Cannot connect to robot");
-      });
+        rosLidar.on("error", (error) => {
+          _lidarConnection = null;
+          console.log("error:", error);
+          ws.send("ROSLib connection error " + error);
+          console.log("Cannot connect to robot");
+        });
 
-      rosLidar.on("close", () => {
-        _lidarConnection = null;
-        ws.send("ROSLib connection closed");
+        rosLidar.on("close", () => {
+          _lidarConnection = null;
+          ws.send("ROSLib connection closed");
+        });
       });
     });
 
@@ -218,33 +231,66 @@ async function updateTask(rfid, type) {
     });
   }
 }
+
+async function startWaypoint(waypointId) {
+  try {
+    const waypoint = await Waypoint.findById(waypointId);
+    if (!waypoint) {
+      console.log("Waypoint not found");
+      return;
+    }
+
+    if (waypoint.status === "Unexecuted") {
+      const otherWaypoints = await Waypoint.find({
+        status: "On Process",
+        _id: { $ne: waypointId },
+      });
+      if (otherWaypoints.length > 0) {
+        await Promise.all(
+          otherWaypoints.map(async (otherWaypoint) => {
+            otherWaypoint.status = "Pending";
+            await otherWaypoint.save();
+            console.log("Waypoint status changed:", otherWaypoint);
+          })
+        );
+      }
+      waypoint.status = "On Process";
+      await waypoint.save();
+      console.log("Waypoint started:", waypoint);
+    } else {
+      console.log("Waypoint already executed or in process");
+    }
+  } catch (error) {
+    console.error("Error starting waypoint:", error);
+  }
+}
+
 async function updateWaypoint(data) {
   const { position, orientation } = data;
   const { x, y } = position;
   const { z, w } = orientation;
 
   try {
-    let waypoints = await Waypoint.findOne({
+    let waypoints = await Waypoint.find({
       "pose_to.x": x,
       "pose_to.y": y,
       "pose_to.z": z,
       "pose_to.w": w,
-      status: "Unexecuted",
+      status: "On Process",
     });
 
     if (waypoints.length > 0) {
-      for (let i = 0; i < waypoints.length; i++) {
-        const waypoint = waypoints[i];
-        console.log("waypoint ketemu:", waypoint);
+      const waypoint = waypoints[0];
+      console.log("waypoint ketemu:", waypoint);
 
-        waypoint.status = "Finished";
-        waypoint.time_end = new Date();
-        await waypoint.save();
+      waypoint.status = "Finished";
+      waypoint.time_end = new Date();
+      await waypoint.save();
 
-        broadcast("/ws/connect/lidar", JSON.stringify({ waypoint }));
-      }
+      console.log("waypoint dah selesai:", waypoint);
+      broadcast("/ws/connect/lidar", JSON.stringify({ waypoint }));
     } else {
-      console.log("waypoint tidak ditemukan");
+      console.log("waypoint ga ketemu");
     }
   } catch (error) {
     console.error("Error finding/updating waypoints:", error);

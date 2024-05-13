@@ -1,7 +1,7 @@
 /**
  * @swagger
  * tags:
- *   name: waypoint
+ *   name: Waypoint
  *   description: API untuk mengelola data waypoint (waypoint)
  * /api/waypoint/{id}:
  *   delete:

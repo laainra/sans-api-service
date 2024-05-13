@@ -1,13 +1,13 @@
 /**
  * @swagger
  * tags:
- *   name: pose
+ *   name: Pose
  * /pose:
  *   get:
  *     security:
  *      - Bearer: []
  *     summary: tampil semua data pose
- *     tags: [pose]
+ *     tags: [Pose]
  *     responses:
  *       200:
  *         description: Success.
@@ -17,7 +17,7 @@
  *     security:
  *      - Bearer: []
  *     summary: insert data pose
- *     tags: [pose]
+ *     tags: [Pose]
  *     requestBody:
  *       required: true
  *       content:
@@ -40,7 +40,7 @@
  *        schema:
  *          type: string
  *     summary: cari data pose
- *     tags: [pose]
+ *     tags: [Pose]
  *     responses:
  *       200:
  *         description: Success.
@@ -62,7 +62,7 @@
  *        schema:
  *          type: string
  *     summary: cari data pose
- *     tags: [pose]
+ *     tags: [Pose]
  *     responses:
  *       200:
  *         description: Success.
@@ -78,7 +78,7 @@
  *        schema:
  *          type: string
  *     summary: hapus data pose
- *     tags: [pose]
+ *     tags: [Pose]
  *     responses:
  *       200:
  *         description: Success.
@@ -98,21 +98,29 @@ module.exports = function (app) {
     next();
   });
 
-  app.get("/api/pose", 
-//   [authJwt],
-   controller.getAllPoseData);
+  app.get(
+    "/api/pose",
+    //   [authJwt],
+    controller.getAllPoseData
+  );
 
   //   app.get("/api/pose/:id", [authJwt], controller.findPoseData);
 
-  app.post("/api/pose", 
-//   [authJwt],
-   controller.insertPoseData);
+  app.post(
+    "/api/pose",
+    //   [authJwt],
+    controller.insertPoseData
+  );
 
-  app.put("/api/pose/:id", 
-//   [authJwt],
-   controller.updatePoseData);
+  app.put(
+    "/api/pose/:id",
+    //   [authJwt],
+    controller.updatePoseData
+  );
 
-  app.delete("/api/pose/:id", 
-//   [authJwt],
-   controller.deletePoseData);
+  app.delete(
+    "/api/pose/:id",
+    //   [authJwt],
+    controller.deletePoseData
+  );
 };

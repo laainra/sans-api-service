@@ -24,6 +24,7 @@
  *         description: Success.
  *       403:
  *         description: Unauthenticated.
+
  */
 
 const moment = require("moment/moment");
@@ -41,14 +42,16 @@ module.exports = function taskListener() {
 
     if (!task) return;
 
-    const today = moment().startOf('day')
+    const today = moment().startOf("day");
 
-    let tasks = await Task.find({ time_start : {
+    let tasks = await Task.find({
+      time_start: {
         $gte: today.toDate(),
-        $lte: moment(today).endOf('day').toDate()
-    } });
+        $lte: moment(today).endOf("day").toDate(),
+      },
+    });
 
-    broadcast("task-line" ,JSON.stringify(tasks));
+    broadcast("task-line", JSON.stringify(tasks));
   });
 
   changeStream.on("error", (err) => {
