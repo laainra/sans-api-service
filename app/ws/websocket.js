@@ -148,14 +148,14 @@ const wsRoute = (app) => {
         },
       });
 
-      ws.on("message", (msg) => {
-        broadcast(`dashboard-${type}`, msg);
-        broadcast(`line`, msg);
-      });
-
       ws.send(JSON.stringify(tasks));
-      broadcast("line", JSON.stringify(tasks));
+      // broadcast("line", JSON.stringify(tasks));
     }
+
+    ws.on("message", (msg) => {
+      broadcast(`dashboard-${type}`, msg);
+      broadcast(`line`, msg);
+    });
 
     ws.on("close", () => {
       clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
