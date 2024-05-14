@@ -129,10 +129,9 @@ const wsRoute = (app) => {
       console.log("discon");
     });
   });
-
   app.ws("/ws/task/:type", async (ws, req) => {
     const { type } = req.params;
-    url = "task-" + type;
+    const url = "task-" + type;
 
     if (!clientsByURL[url]) {
       clientsByURL[url] = [];
@@ -141,7 +140,6 @@ const wsRoute = (app) => {
 
     if (ws.readyState === ws.OPEN) {
       const today = moment().startOf("day");
-
       let tasks = await Task.find({
         "agv.type": type,
         time_start: {
@@ -150,10 +148,14 @@ const wsRoute = (app) => {
         },
       });
 
-      ws.send(JSON.stringify(tasks));
-    }
+      ws.on("message", (msg) => {
+        broadcast(`dashboard-${type}`, msg);
+        broadcast(`line`, msg);
+      });
 
-    ws.on("open", async (msg) => {});
+      ws.send(JSON.stringify(tasks));
+      broadcast("line", JSON.stringify(tasks));
+    }
 
     ws.on("close", () => {
       clientsByURL[url] = clientsByURL[url].filter((client) => client !== ws);
@@ -188,12 +190,17 @@ const wsRoute = (app) => {
 
     ws.on("message", (msg) => {
       try {
-        let res = JSON.parse(msg);
+        const res = JSON.parse(msg);
 
-        if (res["payload"]) updateTask(res["payload"], url);
-        else broadcast(`dashboard-${url}`, res);
+        if (res.payload) {
+          console.log(res);
+          updateTask(res.payload, url);
+          broadcast(`task-${url}`, msg);
+        } else {
+          broadcast(`dashboard-${url}`, msg);
+        }
       } catch (e) {
-        console.log("AWD");
+        console.error("Error parsing message:", e);
       }
     });
 
@@ -204,31 +211,27 @@ const wsRoute = (app) => {
 };
 
 async function updateTask(rfid, type) {
-  console.log("masuk");
-  let agv = await AGV.findOne({ type: type });
-  let newStation = await Station.findOne({ rfid: rfid });
+  try {
+    const agv = await AGV.findOne({ type: type });
+    const newStation = await Station.findOne({ rfid: rfid });
 
-  console.log("nyari agv");
-  // kalo ga ketemu return
-  if (!agv || !newStation) return;
-  console.log("agv ketemu");
-  let task = await Task.findOne({ station_to: null, agv: agv });
-  console.log("nyari task");
-  // jadi station end
-  if (task) {
-    console.log("task ketemu");
-    task.station_to = newStation;
-    task.time_end = Date.now();
-    task.save();
-  }
-  // jadi station start
-  else {
-    console.log("ga ketemu");
-    await Task.create({
-      agv: agv,
-      station_from: newStation,
-      time_start: Date.now(),
-    });
+    if (!agv || !newStation) return;
+
+    let task = await Task.findOne({ station_to: null, agv: agv });
+
+    if (task) {
+      task.station_to = newStation;
+      task.time_end = Date.now();
+      await task.save();
+    } else {
+      await Task.create({
+        agv: agv,
+        station_from: newStation,
+        time_start: Date.now(),
+      });
+    }
+  } catch (error) {
+    console.error("Error updating task:", error);
   }
 }
 
