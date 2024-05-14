@@ -143,7 +143,7 @@ const wsRoute = (app) => {
       const today = moment().startOf("day");
 
       let tasks = await Task.find({
-        // "agv.type": type,
+        "agv.type": type,
         time_start: {
           $gte: today.toDate(),
           $lte: moment(today).endOf("day").toDate(),
