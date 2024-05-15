@@ -83,11 +83,11 @@
  *               pose_from:
  *                 type: string
  *                 description: Kode posisi asal
- *                 example: "POSE-A"
+ *                 example: "POSE-1"
  *               pose_to:
  *                 type: string
  *                 description: Kode posisi tujuan
- *                 example: "POSE-B"
+ *                 example: "POSE-2"
  *               time_start:
  *                 type: string
  *                 format: date-time

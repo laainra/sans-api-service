@@ -24,6 +24,29 @@
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/pose'
+ *             type: object
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 example: POSE-1
+ *               x:
+ *                 type: string
+ *                 example: 1.0
+ *               y:
+ *                 type: string
+ *                 example: 1.0
+ *               z:
+ *                 type: string
+ *                 example: 0.0
+ *               w:
+ *                 type: string
+ *                 example: 0.0
+ *             required:
+ *               - code
+ *               - x
+ *               - y
+ *               - z
+ *               - w
  *     responses:
  *       200:
  *         description: Update success.

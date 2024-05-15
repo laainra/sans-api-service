@@ -22,24 +22,26 @@
  *         w:
  *           type: string
  *       example:
- *         code: POSE-A
- *         x: 3
- *         y: 2
- *         z: 5
- *         w: 1
+ *         code: POSE-1
+ *         x: 3.1
+ *         y: 2.0
+ *         z: 0.2
+ *         w: 1.0
  */
 
 const mongoose = require("mongoose");
 
-const PoseSchema = new mongoose.Schema({
+const PoseSchema = new mongoose.Schema(
+  {
     code: String,
     x: String,
     y: String,
     z: String,
     w: String,
-}, { collection: 'poses' });
+  },
+  { collection: "poses" }
+);
 
-const Pose = mongoose.model('Pose', PoseSchema);
-
+const Pose = mongoose.model("Pose", PoseSchema);
 
 module.exports = Pose;
