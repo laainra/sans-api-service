@@ -31,7 +31,7 @@ exports.findAgvData = (req, res) => {
 };
 
 exports.insertAgvData = async (req, res) => {
-  console.log(res.body)
+  console.log(res.body);
   agv
     .create({
       code: req.body.code,
@@ -51,8 +51,11 @@ exports.deleteAgvData = (req, res) => {
   const id = req.params.id;
 
   agv
-    .findOneAndDelete(id)
+    .findByIdAndDelete(id)
     .then((agvData) => {
+      if (!agvData) {
+        return res.status(404).json({ message: "AGV not found" });
+      }
       res.status(200).json({ message: "AGV deleted" });
     })
     .catch((err) => {

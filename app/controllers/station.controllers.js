@@ -53,7 +53,7 @@ exports.deleteStationData = (req, res) => {
   const id = req.params.id;
 
   station
-    .findOneAndDelete(id)
+    .findByIdAndDelete(id)
     .then((stationData) => {
       res.status(200).json({ message: "station deleted" });
     })
@@ -78,12 +78,10 @@ exports.updateStationData = (req, res) => {
         stationData
           .save()
           .then((updatedstation) => {
-            res
-              .status(200)
-              .json({
-                message: "station data updated successfully",
-                data: updatedstation,
-              });
+            res.status(200).json({
+              message: "station data updated successfully",
+              data: updatedstation,
+            });
           })
           .catch((err) => {
             res.status(500).json({ message: err.message });

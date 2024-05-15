@@ -4,7 +4,6 @@ const Station = require("../models/station.model.js");
 const moment = require("moment/moment");
 
 exports.getTaskDataByDate = (req, res) => {
-
   const type = req.params.type;
   const start_date = moment(new Date(req.body.start_date)).toDate();
   const end_date = moment(new Date(req.body.end_date)).toDate();
@@ -25,7 +24,8 @@ exports.getTaskDataByDate = (req, res) => {
 };
 
 exports.getAllTaskData = (req, res) => {
-  task.find()
+  task
+    .find()
     .then((tasks) => {
       res.status(200).json({ message: "Success", data: tasks });
     })
@@ -35,9 +35,9 @@ exports.getAllTaskData = (req, res) => {
 };
 
 exports.getTaskDataByType = (req, res) => {
-
   const type = req.params.type;
-  task.find({"agv.type": type})
+  task
+    .find({ "agv.type": type })
     .then((tasks) => {
       res.status(200).json({ message: "Success", data: tasks });
     })
@@ -45,7 +45,6 @@ exports.getTaskDataByType = (req, res) => {
       res.status(500).json({ message: err.message });
     });
 };
-
 
 exports.insertTask = async (req, res) => {
   const agvCode = req.body.agv;
@@ -55,24 +54,20 @@ exports.insertTask = async (req, res) => {
   const time_end = req.body.time_end;
 
   try {
-
     const agv = await Agv.findOne({ code: agvCode });
     if (!agv) {
       return res.status(404).send({ message: "AGV not found" });
     }
 
- 
     const stationFrom = await Station.findOne({ code: station_from });
     if (!stationFrom) {
       return res.status(404).send({ message: "Station from not found" });
     }
 
-
     const stationTo = await Station.findOne({ code: station_to });
     if (!stationTo) {
       return res.status(404).send({ message: "Station to not found" });
     }
-
 
     const taskData = {
       agv: {
@@ -98,7 +93,6 @@ exports.insertTask = async (req, res) => {
       time_end: time_end,
     };
 
-
     const createdTask = await task.create(taskData);
     res.status(201).send({ message: "Task inserted", data: createdTask });
   } catch (err) {
@@ -110,7 +104,7 @@ exports.deletetaskData = (req, res) => {
   const id = req.params.id;
 
   task
-    .findOneAndDelete(id)
+    .findByIdAndDelete(id)
     .then((taskData) => {
       res.status(200).json({ message: "task deleted" });
     })

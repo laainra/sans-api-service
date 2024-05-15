@@ -22,7 +22,7 @@ exports.deletePoseData = (req, res) => {
   const id = req.params.id;
 
   pose
-    .findOneAndDelete(id)
+    .findByIdAndDelete(id)
     .then((poseData) => {
       res.status(200).json({ message: "pose deleted" });
     })
@@ -65,17 +65,17 @@ exports.updatePoseData = (req, res) => {
 };
 
 exports.getAllPoseData = (req, res) => {
-    pose
-      .find()
-      .then((pose) => {
-        console.log(pose);
-        if (!pose) {
-          res.status(401).json({ message: "pose not found" });
-        } else {
-          res.status(200).json({ message: "Success", data: pose });
-        }
-      })
-      .catch((err) => {
-        res.status(500).json({ message: err.message });
-      });
-  };
+  pose
+    .find()
+    .then((pose) => {
+      console.log(pose);
+      if (!pose) {
+        res.status(401).json({ message: "pose not found" });
+      } else {
+        res.status(200).json({ message: "Success", data: pose });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({ message: err.message });
+    });
+};
