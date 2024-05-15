@@ -23,10 +23,10 @@
  *           type: string
  *       example:
  *         code: POSE-1
- *         x: 3.1
- *         y: 2.0
- *         z: 0.2
- *         w: 1.0
+ *         x: "3.1"
+ *         y: "2.0"
+ *         z: "0.2"
+ *         w: "1.0"
  */
 
 const mongoose = require("mongoose");

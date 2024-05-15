@@ -25,13 +25,13 @@
  *           type: string
  *       example:
  *         Pose_from:
- *          code: POSE-A
+ *          code: POSE-1
  *          x: 3
  *          y: 2
  *          z: 5
  *          w: 1
  *         Pose_to:
- *          code: POSE-B
+ *          code: POSE-2
  *          x: 4
  *          y: 5
  *          z: 6
