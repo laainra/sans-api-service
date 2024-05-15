@@ -21,7 +21,6 @@ const broadcast = (url, message) => {
 const wsRoute = (app) => {
   // lidar routes
   app.ws("/ws/connect/lidar", (ws, req) => {
-    let isOnProcess = false;
     ws.on("message", (msg) => {
       if (_lidarConnection) return ws.send("ROSLib already connected");
 
@@ -36,9 +35,8 @@ const wsRoute = (app) => {
 
       rosLidar.on("connection", () => {
         _lidarConnection = rosLidar;
-        ws.send("ROSLib connection successful");
+        ws.send("ROSLib connection successful to ROSBRIDGE:" + msg);
 
-        // Subscribe to robot_pose topic
         const robotPoseTopic = new ROSLIB.Topic({
           ros: rosLidar,
           name: "/robot_pose",
@@ -110,7 +108,7 @@ const wsRoute = (app) => {
           _lidarConnection = null;
           console.log("error:", error);
           ws.send("ROSLib connection error " + error);
-          console.log("Cannot connect to robot");
+          console.log("Cannot connect to robot" + error);
         });
 
         rosLidar.on("close", () => {
@@ -243,6 +241,7 @@ async function startWaypoint(waypointId) {
     if (waypoint.status === "Unexecuted") {
       const otherWaypoints = await Waypoint.find({
         status: "On Process",
+        time_start: new Date(),
         _id: { $ne: waypointId },
       });
       if (otherWaypoints.length > 0) {

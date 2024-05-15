@@ -4,11 +4,33 @@
  *   name: Waypoint
  *   description: API untuk mengelola data waypoint (waypoint)
  * /api/waypoint/{id}:
+ *   put:
+ *     summary: Mengubah data waypoint berdasarkan id
+ *     security:
+ *       - Bearer: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/pose'
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     tags: [Waypoint]
+ *     responses:
+ *       200:
+ *         description: Success.
+ *       403:
+ *         description: Unauthenticated.
  *   delete:
  *     summary: Menghapus waypoint berdasarkan ID
  *     description: Menghapus waypoint dari database berdasarkan ID yang diberikan.
  *     security:
- *      - Bearer: []
+ *       - Bearer: []
  *     tags: [Waypoint]
  *     parameters:
  *       - in: path
@@ -19,16 +41,16 @@
  *           type: string
  *     responses:
  *       200:
- *         description: waypoint berhasil dihapus.
+ *         description: Waypoint berhasil dihapus.
  *       404:
- *         description: waypoint tidak ditemukan.
+ *         description: Waypoint tidak ditemukan.
  *       500:
  *         description: Terjadi kesalahan server.
  *   get:
  *     summary: Mendapatkan data waypoint berdasarkan jenis (type)
  *     description: Mendapatkan data waypoint dari database berdasarkan jenis (type) yang diberikan.
  *     security:
- *      - Bearer: []
+ *       - Bearer: []
  *     tags: [Waypoint]
  *     parameters:
  *       - in: path
@@ -49,7 +71,7 @@
  *     summary: Menambahkan waypoint baru
  *     description: Menambahkan waypoint baru ke database.
  *     security:
- *      - Bearer: []
+ *       - Bearer: []
  *     tags: [Waypoint]
  *     requestBody:
  *       required: true
@@ -79,7 +101,7 @@
  *               status:
  *                 type: string
  *                 example: "On-Going"
- *                 description: status perjalanan waypoint
+ *                 description: Status perjalanan waypoint
  *             required:
  *               - pose_from
  *               - pose_to
@@ -88,7 +110,7 @@
  *               - status
  *     responses:
  *       201:
- *         description: waypoint berhasil ditambahkan.
+ *         description: Waypoint berhasil ditambahkan.
  *       400:
  *         description: Data yang diberikan tidak valid.
  *       404:
@@ -96,6 +118,7 @@
  *       500:
  *         description: Terjadi kesalahan server.
  */
+
 
 const controller = require("../controllers/waypoint.controllers");
 const authJwt = require("../middlewares/authorization");
@@ -125,6 +148,11 @@ module.exports = function (app) {
     "/api/waypoint",
     // [authJwt],
     controller.insertWaypoint
+  );
+  app.put(
+    "/api/waypoint/:id",
+    // [authJwt],
+    controller.updateWaypointData
   );
 
   app.delete("/api/waypoint/:id", [authJwt], controller.deleteWaypointData);
