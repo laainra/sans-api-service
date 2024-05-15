@@ -28,10 +28,10 @@ const app = express();
 dotenv.config();
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173", "http://127.0.0.1:5500"],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true, 
-  optionsSuccessStatus: 204
+  credentials: true,
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));

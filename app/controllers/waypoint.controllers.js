@@ -37,12 +37,12 @@ exports.insertWaypoint = async (req, res) => {
   const time_end = req.body.time_end;
 
   try {
-    const poseFrom = await pose.findOne({ pose_from: pose_from });
+    const poseFrom = await pose.findOne({ code: pose_from });
     if (!poseFrom) {
       return res.status(404).send({ message: "pose from not found" });
     }
 
-    const poseTo = await pose.findOne({ pose_from: pose_to });
+    const poseTo = await pose.findOne({ code: pose_to });
     if (!poseTo) {
       return res.status(404).send({ message: "pose to not found" });
     }
@@ -50,7 +50,7 @@ exports.insertWaypoint = async (req, res) => {
     const WaypointData = {
       pose_from: {
         _id: poseFrom._id,
-        pose_from: poseFrom.pose_from,
+        pose_from: poseFrom.code,
         x: poseFrom.x,
         y: poseFrom.y,
         z: poseFrom.z,
@@ -58,7 +58,7 @@ exports.insertWaypoint = async (req, res) => {
       },
       pose_to: {
         _id: poseTo._id,
-        pose_from: poseTo.pose_from,
+        pose_from: poseTo.code,
         x: poseFrom.x,
         y: poseFrom.y,
         z: poseFrom.z,
@@ -93,8 +93,7 @@ exports.deleteWaypointData = (req, res) => {
 exports.updateWaypointData = (req, res) => {
   const id = req.params.id;
 
-  Waypoint
-    .findById(id)
+  Waypoint.findById(id)
     .then((WaypointData) => {
       if (!WaypointData) {
         res.status(401).json({ message: "Waypoint not found" });
@@ -103,15 +102,12 @@ exports.updateWaypointData = (req, res) => {
         WaypointData.pose_to = req.body.pose_to || WaypointData.pose_to;
         WaypointData.status = req.body.status || WaypointData.status;
 
-        WaypointData
-          .save()
+        WaypointData.save()
           .then((updatedWaypoint) => {
-            res
-              .status(200)
-              .json({
-                message: "Waypoint data updated successfully",
-                data: updatedWaypoint,
-              });
+            res.status(200).json({
+              message: "Waypoint data updated successfully",
+              data: updatedWaypoint,
+            });
           })
           .catch((err) => {
             res.status(500).json({ message: err.message });

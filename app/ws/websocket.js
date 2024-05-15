@@ -63,7 +63,6 @@ const wsRoute = (app) => {
           updateWaypoint(pose);
         });
 
-        // Process incoming messages
         ws.on("message", async (msg) => {
           const poseTopic = new ROSLIB.Topic({
             ros: rosLidar,
