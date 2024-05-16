@@ -1,5 +1,6 @@
 const Waypoint = require("../models/waypoint.model.js");
 const pose = require("../models/pose.model.js");
+const Agv = require("../models/agv.model.js");
 const moment = require("moment/moment");
 
 exports.getWaypointDataByDate = (req, res) => {
@@ -31,12 +32,18 @@ exports.getAllWaypointData = (req, res) => {
 };
 
 exports.insertWaypoint = async (req, res) => {
+  const agv = req.body.agv;
   const pose_from = req.body.pose_from;
   const pose_to = req.body.pose_to;
   const time_start = req.body.time_start;
   const time_end = req.body.time_end;
 
   try {
+    const agvData = await Agv.findOne({ code: agv });
+    if (!agvData) {
+      return res.status(404).send({ message: "AGV from not found" });
+    }
+
     const poseFrom = await pose.findOne({ code: pose_from });
     if (!poseFrom) {
       return res.status(404).send({ message: "pose from not found" });
@@ -48,6 +55,13 @@ exports.insertWaypoint = async (req, res) => {
     }
 
     const WaypointData = {
+      agv: {
+        _id: agvData._id,
+        code: agvData.code,
+        description: agvData.description,
+        type: agvData.type,
+        ip: agvData.ip,
+      },
       pose_from: {
         _id: poseFrom._id,
         pose_from: poseFrom.code,

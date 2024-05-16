@@ -48,11 +48,11 @@ const wsRoute = (app) => {
             position: {
               x: message.position.x,
               y: message.position.y,
-              // z: message.position.z,
+              z: message.position.z,
             },
             orientation: {
-              // x: message.orientation.x,
-              // y: message.orientation.y,
+              x: message.orientation.x,
+              y: message.orientation.y,
               z: message.orientation.z,
               w: message.orientation.w,
             },
