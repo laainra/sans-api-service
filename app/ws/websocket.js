@@ -19,113 +19,118 @@ const broadcast = (url, message) => {
 };
 
 const wsRoute = (app) => {
-  // lidar routes
   app.ws("/ws/connect/lidar", (ws, req) => {
+    let _lidarConnection;
+
     ws.on("message", (msg) => {
-      if (_lidarConnection) return ws.send("ROSLib already connected");
+        if (_lidarConnection) return ws.send("ROSLib already connected");
 
-      if (!msg.startsWith("ws://"))
-        return ws.send("Please provide websocket address");
+        if (!msg.startsWith("ws://"))
+            return ws.send("Please provide websocket address");
 
-      ws.send("Trying to connect");
+        ws.send("Trying to connect");
 
-      let rosLidar = new ROSLIB.Ros({
-        url: msg,
-      });
-
-      rosLidar.on("connection", () => {
-        _lidarConnection = rosLidar;
-        ws.send("ROSLib connection successful to ROSBRIDGE:" + msg);
-
-        const robotPoseTopic = new ROSLIB.Topic({
-          ros: rosLidar,
-          name: "/robot_pose",
-          messageType: "geometry_msgs/Pose",
+        let rosLidar = new ROSLIB.Ros({
+            url: msg,
         });
 
-        robotPoseTopic.subscribe((message) => {
-          const pose = {
-            position: {
-              x: message.position.x,
-              y: message.position.y,
-              z: message.position.z,
-            },
-            orientation: {
-              x: message.orientation.x,
-              y: message.orientation.y,
-              z: message.orientation.z,
-              w: message.orientation.w,
-            },
-          };
-
-          ws.send(JSON.stringify(pose));
-          console.log(pose);
-          updateWaypoint(pose);
-        });
-
-        ws.on("message", async (msg) => {
-          const poseTopic = new ROSLIB.Topic({
-            ros: rosLidar,
-            name: "/move_base_navi_simple/goal",
-            messageType: "geometry_msgs/Pose",
-          });
-
-          try {
-            const parsedMsg = JSON.parse(msg);
-            console.log(parsedMsg);
-
-            if (parsedMsg && parsedMsg.position && parsedMsg.orientation) {
-              const { position, orientation } = parsedMsg;
-              const { x, y } = position;
-              const { z, w } = orientation;
-
-              const poseMsg = new ROSLIB.Message({
-                header: { frame_id: "map" },
-                pose: { position: { x, y }, orientation: { z, w } },
-              });
-
-              poseTopic.publish(poseMsg);
-              ws.send(JSON.stringify(poseMsg));
-            } else {
-              ws.send(
-                "Invalid message format: position and orientation are required"
-              );
-            }
-
-            if (parsedMsg.command === "start") {
-              const waypointId = parsedMsg.waypointId;
-              await startWaypoint(waypointId);
-              ws.send("Waypoint process started");
-            }
-          } catch (error) {
-            console.error("Error processing message:", error);
-            ws.send("Error processing message: " + error.message);
-          }
-        });
-
+        // Add error handler for ROSLIB connection
         rosLidar.on("error", (error) => {
-          _lidarConnection = null;
-          console.log("error:", error);
-          ws.send("ROSLib connection error " + error);
-          console.log("Cannot connect to robot" + error);
+            _lidarConnection = null;
+            console.error("ROSLib connection error:", error);
+            ws.send("ROSLib connection error: " + error.message);
         });
 
-        rosLidar.on("close", () => {
-          _lidarConnection = null;
-          ws.send("ROSLib connection closed");
+        rosLidar.on("connection", () => {
+            _lidarConnection = rosLidar;
+            ws.send("ROSLib connection successful to ROSBRIDGE: " + msg);
+
+            const robotPoseTopic = new ROSLIB.Topic({
+                ros: rosLidar,
+                name: "/robot_pose",
+                messageType: "geometry_msgs/Pose",
+            });
+
+            robotPoseTopic.subscribe((message) => {
+                const pose = {
+                    position: {
+                        x: message.position.x,
+                        y: message.position.y,
+                        z: message.position.z,
+                    },
+                    orientation: {
+                        x: message.orientation.x,
+                        y: message.orientation.y,
+                        z: message.orientation.z,
+                        w: message.orientation.w,
+                    },
+                };
+
+                ws.send(JSON.stringify(pose));
+                console.log(pose);
+                updateWaypoint(pose);
+            });
+
+            ws.on("message", async (msg) => {
+                const poseTopic = new ROSLIB.Topic({
+                    ros: rosLidar,
+                    name: "/move_base_navi_simple/goal",
+                    messageType: "geometry_msgs/Pose",
+                });
+
+                try {
+                    const parsedMsg = JSON.parse(msg);
+                    console.log(parsedMsg);
+
+                    if (parsedMsg && parsedMsg.position && parsedMsg.orientation) {
+                        const { position, orientation } = parsedMsg;
+                        const { x, y } = position;
+                        const { z, w } = orientation;
+
+                        const poseMsg = new ROSLIB.Message({
+                            header: { frame_id: "map" },
+                            pose: { position: { x, y }, orientation: { z, w } },
+                        });
+
+                        poseTopic.publish(poseMsg);
+                        ws.send(JSON.stringify(poseMsg));
+                    } else {
+                        ws.send(
+                            "Invalid message format: position and orientation are required"
+                        );
+                    }
+
+                    if (parsedMsg.command === "start") {
+                        const waypointId = parsedMsg.waypointId;
+                        await startWaypoint(waypointId);
+                        ws.send("Waypoint process started");
+                    }
+                } catch (error) {
+                    console.error("Error processing message:", error);
+                    ws.send("Error processing message: " + error.message);
+                }
+            });
+
+            rosLidar.on("close", () => {
+                _lidarConnection = null;
+                ws.send("ROSLib connection closed");
+            });
         });
-      });
     });
 
-    ws.on("connection", () => {
-      console.log("connection");
-      if (_lidarConnection) ws.send("ROSLib connected");
+    ws.on("error", (error) => {
+        console.error("WebSocket error:", error);
+        ws.send("WebSocket error: " + error.message);
     });
 
     ws.on("close", () => {
-      console.log("discon");
+        console.log("WebSocket connection closed");
+        if (_lidarConnection) {
+            _lidarConnection.close();
+            _lidarConnection = null;
+        }
     });
-  });
+});
 
   app.ws("/ws/task/:type", async (ws, req) => {
     const { type } = req.params;

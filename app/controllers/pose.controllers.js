@@ -31,6 +31,19 @@ exports.deletePoseData = (req, res) => {
     });
 };
 
+exports.findPoseData = (req, res) => {
+  const id = req.params.id;
+
+  pose
+    .findByIdAndDelete(id)
+    .then((poseData) => {
+      res.status(200).json({ message: "pose found" });
+    })
+    .catch((err) => {
+      res.status(500).json({ message: err.message });
+    });
+};
+
 exports.updatePoseData = (req, res) => {
   const id = req.params.id;
 

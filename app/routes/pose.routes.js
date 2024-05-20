@@ -123,27 +123,27 @@ module.exports = function (app) {
 
   app.get(
     "/api/pose",
-    //   [authJwt],
+      [authJwt],
     controller.getAllPoseData
   );
 
-  //   app.get("/api/pose/:id", [authJwt], controller.findPoseData);
+    app.get("/api/pose/:id", [authJwt], controller.findPoseData);
 
   app.post(
     "/api/pose",
-    //   [authJwt],
+      [authJwt],
     controller.insertPoseData
   );
 
   app.put(
     "/api/pose/:id",
-    //   [authJwt],
+      [authJwt],
     controller.updatePoseData
   );
 
   app.delete(
     "/api/pose/:id",
-    //   [authJwt],
+      [authJwt],
     controller.deletePoseData
   );
 };

@@ -106,7 +106,7 @@ exports.deletetaskData = (req, res) => {
   task
     .findByIdAndDelete(id)
     .then((taskData) => {
-      res.status(200).json({ message: "task deleted" });
+      res.status(200).json({ message: "task deleted", data: taskData });
     })
     .catch((err) => {
       res.status(500).json({ message: err.message });

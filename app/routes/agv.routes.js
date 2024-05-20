@@ -99,22 +99,22 @@ module.exports = function(app) {
   });
 
   app.get("/api/agv", 
-  // [authJwt],
+  [authJwt],
    controller.getAllAgvData);
 
   app.get("/api/agv/:id", 
-  // [authJwt], 
+  [authJwt], 
   controller.findAgvData);
 
   app.post("/api/agv", 
-  // [authJwt],
+  [authJwt],
    controller.insertAgvData);
 
   app.put("/api/agv/:id", 
-  // [authJwt], 
+  [authJwt], 
   controller.updateAgvData);
 
   app.delete("/api/agv/:id", 
-  // [authJwt],
+  [authJwt],
    controller.deleteAgvData);
 };
