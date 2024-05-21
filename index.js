@@ -58,13 +58,6 @@ app.get("/", (req, res) => {
   res.redirect("/docs");
 });
 
-app.get("/test", (req, res) => {
-  res.send("masuk");
-});
-
-app.get("/try", (req, res) => {
-  res.send("ini halaman baruuuuu");
-});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -93,10 +86,8 @@ db.mongoose
 authRoutes(app);
 userRoutes(app);
 taskRoutes(app);
-websocket.wsRoute(app);
 agvRoutes(app);
 stationRoutes(app);
 poseRoutes(app);
 waypointRoutes(app);
-
-// ngrok http --domain=tidy-terribly-boa.ngrok-free.app 80
+websocket.wsRoute(app);

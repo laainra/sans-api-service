@@ -25,7 +25,7 @@ const wsRoute = (app) => {
     ws.on("message", (msg) => {
         if (_lidarConnection) return ws.send("ROSLib already connected");
 
-        if (!msg.startsWith("ws://"))
+        if (!msg.startsWith("ws://") || !msg.startsWith("wss://") )
             return ws.send("Please provide websocket address");
 
         ws.send("Trying to connect");
@@ -102,6 +102,7 @@ const wsRoute = (app) => {
 
                     if (parsedMsg.command === "start") {
                         const waypointId = parsedMsg.waypointId;
+                        poseTopic.publish(poseMsg);
                         await startWaypoint(waypointId);
                         ws.send("Waypoint process started");
                     }
@@ -110,6 +111,7 @@ const wsRoute = (app) => {
                     ws.send("Error processing message: " + error.message);
                 }
             });
+            
 
             rosLidar.on("close", () => {
                 _lidarConnection = null;
