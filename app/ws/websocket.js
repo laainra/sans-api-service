@@ -19,7 +19,7 @@ const broadcast = (url, message) => {
 };
 
 const wsRoute = (app) => {
-  app.ws("/ws/lidar", (ws, req) => {
+  app.ws("/ws/connect/lidar", (ws, req) => {
     let _lidarConnection;
 
     ws.on("open", () => {
