@@ -133,15 +133,15 @@ const wsRoute = (app) => {
                             stamp: [0,0],
                             frame_id: ""
                           },
-                          axes: [],
-                          buttons: []
+                          axes: parsedMsg.axes,
+                          buttons: parsedMsg.buttons
                         });
 
                         poseTopic.publish(joyMsg);
                         ws.send(JSON.stringify(joyMsg));
                     } else {
                         ws.send(
-                            "Invalid message format: position and orientation are required"
+                            "Invalid message format: axes and buttons are required"
                         );
                     }
 
