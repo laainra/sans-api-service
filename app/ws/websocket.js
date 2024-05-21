@@ -22,13 +22,7 @@ const wsRoute = (app) => {
   app.ws("/ws/connect/lidar", (ws, req) => {
     let _lidarConnection;
 
-    ws.on("open", () => {
-      console.log("WebSocket connection established");
-    });
-
     ws.on("message", (msg) => {
-
-
       if (_lidarConnection) return ws.send("ROSLib already connected");
 
       if (!msg.startsWith("ws://"))
@@ -50,9 +44,6 @@ const wsRoute = (app) => {
       rosLidar.on("connection", () => {
         _lidarConnection = rosLidar;
         ws.send("ROSLib connection successful to ROSBRIDGE: " + msg);
-
-        const parsedMsg = JSON.parse(msg);
-        console.log("Parsed message:", parsedMsg); 
 
         // const robotPoseTopic = new ROSLIB.Topic({
         //   ros: rosLidar,
@@ -123,41 +114,41 @@ const wsRoute = (app) => {
 
         // joystick
         ws.on("message", async (msg) => {
-        const joyTopic = new ROSLIB.Topic({
-          ros: rosLidar,
-          name: "/joy",
-          messageType: "sensor_msgs/Joy",
-        });
+          const joyTopic = new ROSLIB.Topic({
+            ros: rosLidar,
+            name: "/joy",
+            messageType: "sensor_msgs/Joy",
+          });
 
-        try {
-          const parsedMsg = JSON.parse(msg);
-          console.log(parsedMsg);
+          try {
+            const parsedMsg = JSON.parse(msg);
+            console.log(parsedMsg);
 
-          if (
-            Array.isArray(parsedMsg.axes) &&
-            Array.isArray(parsedMsg.buttons)
-          ) {
-            const joyMsg = new ROSLIB.Message({
-              header: {
-                stamp: {
-                  secs: 0,
-                  nsecs: 0,
+            if (
+              Array.isArray(parsedMsg.axes) &&
+              Array.isArray(parsedMsg.buttons)
+            ) {
+              const joyMsg = new ROSLIB.Message({
+                header: {
+                  stamp: {
+                    secs: 0,
+                    nsecs: 0,
+                  },
+                  frame_id: "",
                 },
-                frame_id: "",
-              },
-              axes: parsedMsg.axes,
-              buttons: parsedMsg.buttons,
-            });
+                axes: parsedMsg.axes,
+                buttons: parsedMsg.buttons,
+              });
 
-            joyTopic.publish(joyMsg);
-            ws.send(JSON.stringify(joyMsg));
-          } else {
-            ws.send("Invalid message format: axes and buttons are required");
+              joyTopic.publish(joyMsg);
+              ws.send(JSON.stringify(joyMsg));
+            } else {
+              ws.send("Invalid message format: axes and buttons are required");
+            }
+          } catch (error) {
+            console.error("Error processing message:", error);
+            ws.send("Error processing message: " + error.message);
           }
-        } catch (error) {
-          console.error("Error processing message:", error);
-          ws.send("Error processing message: " + error.message);
-        }
         });
 
         rosLidar.on("close", () => {
