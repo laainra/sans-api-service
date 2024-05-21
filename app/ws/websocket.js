@@ -25,7 +25,7 @@ const wsRoute = (app) => {
     ws.on("message", (msg) => {
         if (_lidarConnection) return ws.send("ROSLib already connected");
 
-        if (!msg.startsWith("ws://") || !msg.startsWith("wss://") )
+        if (!msg.startsWith("ws://"))
             return ws.send("Please provide websocket address");
 
         ws.send("Trying to connect");
