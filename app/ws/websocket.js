@@ -22,7 +22,13 @@ const wsRoute = (app) => {
   app.ws("/ws/lidar", (ws, req) => {
     let _lidarConnection;
 
+    ws.on("open", () => {
+      console.log("WebSocket connection established");
+    });
+
     ws.on("message", (msg) => {
+
+
       if (_lidarConnection) return ws.send("ROSLib already connected");
 
       if (!msg.startsWith("ws://"))
@@ -44,6 +50,9 @@ const wsRoute = (app) => {
       rosLidar.on("connection", () => {
         _lidarConnection = rosLidar;
         ws.send("ROSLib connection successful to ROSBRIDGE: " + msg);
+
+        const parsedMsg = JSON.parse(msg);
+        console.log("Parsed message:", parsedMsg); 
 
         // const robotPoseTopic = new ROSLIB.Topic({
         //   ros: rosLidar,
@@ -113,7 +122,7 @@ const wsRoute = (app) => {
         // });
 
         // joystick
-        // ws.on("message", async (msg) => {
+        ws.on("message", async (msg) => {
         const joyTopic = new ROSLIB.Topic({
           ros: rosLidar,
           name: "/joy",
@@ -149,7 +158,7 @@ const wsRoute = (app) => {
           console.error("Error processing message:", error);
           ws.send("Error processing message: " + error.message);
         }
-        // });
+        });
 
         rosLidar.on("close", () => {
           _lidarConnection = null;
