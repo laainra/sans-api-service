@@ -111,6 +111,45 @@ const wsRoute = (app) => {
                     ws.send("Error processing message: " + error.message);
                 }
             });
+
+            // joystick
+            ws.on("message", async (msg) => {
+                const joyTopic = new ROSLIB.Topic({
+                    ros: rosLidar,
+                    name: "/joy",
+                    messageType: "sensor_msgs/Joy",
+                });
+
+                try {
+                    const parsedMsg = JSON.parse(msg);
+                    console.log(parsedMsg);
+
+                    if (parsedMsg && parsedMsg.axes && parsedMsg.buttons) {
+
+                        var joyMsg = new ROSLIB.Message({
+                          header:
+                          {
+                            // seq: 0,
+                            stamp: [0,0],
+                            frame_id: ""
+                          },
+                          axes: [],
+                          buttons: []
+                        });
+
+                        poseTopic.publish(joyMsg);
+                        ws.send(JSON.stringify(joyMsg));
+                    } else {
+                        ws.send(
+                            "Invalid message format: position and orientation are required"
+                        );
+                    }
+
+                } catch (error) {
+                    console.error("Error processing message:", error);
+                    ws.send("Error processing message: " + error.message);
+                }
+            });
             
 
             rosLidar.on("close", () => {
