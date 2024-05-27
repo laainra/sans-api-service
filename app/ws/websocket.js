@@ -34,7 +34,6 @@ const wsRoute = (app) => {
         url: msg,
       });
 
-      // Add error handler for ROSLIB connection
       rosLidar.on("error", (error) => {
         _lidarConnection = null;
         console.error("ROSLib connection error:", error);
@@ -45,7 +44,6 @@ const wsRoute = (app) => {
         _lidarConnection = rosLidar;
         ws.send("ROSLib connection successful to ROSBRIDGE: " + msg);
 
-        // joystick
         ws.on("message", async (msg) => {
           const joyTopic = new ROSLIB.Topic({
             ros: rosLidar,
@@ -184,19 +182,19 @@ async function updateTask(rfid, type) {
   let newStation = await Station.findOne({ rfid: rfid });
 
   console.log("nyari agv");
-  // kalo ga ketemu return
+
   if (!agv || !newStation) return;
   console.log("agv ketemu");
   let task = await Task.findOne({ station_to: null, agv: agv });
   console.log("nyari task");
-  // jadi station end
+
   if (task) {
     console.log("task ketemu");
     task.station_to = newStation;
     task.time_end = Date.now();
     task.save();
   }
-  // jadi station start
+
   else {
     console.log("ga ketemu");
     await Task.create({

@@ -34,7 +34,7 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-app.use(cors(corsOptions));
+app.use(cors({ origin: '*' }));
 
 app.use(bodyParser.json());
 
