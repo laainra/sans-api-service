@@ -150,22 +150,10 @@ module.exports = function (app) {
     next();
   });
 
-  app.post(
-    "/api/task/:type",
-    // [authJwt],
-    controller.getTaskDataByDate
-  );
+  app.post("/api/task/:type", [authJwt], controller.getTaskDataByDate);
 
-  app.get(
-    "/api/task",
-    // [authJwt],
-    controller.getAllTaskData
-  );
-  app.get(
-    "/api/task/:type",
-    // [authJwt],
-    controller.getTaskDataByType
-  );
+  app.get("/api/task", [authJwt], controller.getAllTaskData);
+  app.get("/api/task/:type", [authJwt], controller.getTaskDataByType);
 
   app.post(
     "/api/task",

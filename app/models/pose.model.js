@@ -34,10 +34,10 @@ const mongoose = require("mongoose");
 const PoseSchema = new mongoose.Schema(
   {
     code: String,
-    x: String,
-    y: String,
-    z: String,
-    w: String,
+    x: Number,
+    y: Number,
+    z: Number,
+    w: Number,
   },
   { collection: "poses" }
 );
