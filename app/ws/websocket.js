@@ -1,8 +1,59 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Websocket
+ * /ws/connect/lidar:
+ *   get:
+ *     summary: Connect to AGV lidar via WebSocket
+ *     description: |
+ *       Establish a WebSocket connection to the AGV lidar.
+ *       **Sending Messages:**
+ *       - **Send Pose:** To send a waypoint pose to the robot, use the following JSON format:
+ *         ```json
+ *         {
+ *           "pose": {
+ *             "position": {
+ *               "x": 0.0,
+ *               "y": 0.0
+ *             },
+ *             "orientation": {
+ *               "z": 0.0,
+ *               "w": 0.0
+ *             }
+ *           }
+ *         }
+ *         ```
+ *       **Receiving Messages:**
+ *       - **Get Pose:** The response will be in the following JSON format:
+ *         ```json
+ *         {
+ *           "position": {
+ *             "x": 0.0,
+ *             "y": 0.0,
+ *             "z": 0.0
+ *           },
+ *           "orientation": {
+ *             "x": 0.0,
+ *             "y": 0.0,
+ *             "z": 0.0,
+ *             "w": 0.0
+ *           }
+ *         }
+ *         ```
+ *     tags: [Websocket]
+ *     responses:
+ *       200:
+ *         description: Success.
+ *       403:
+ *         description: Unauthenticated.
+ */
+
 const ROSLIB = require("roslib/src/RosLib");
 const AGV = require("../models/agv.model");
 const Station = require("../models/station.model");
 const Task = require("../models/task.model");
 const Waypoint = require("../models/waypoint.model");
+const Pose = require("../models/pose.model");
 const moment = require("moment/moment");
 
 const clientsByURL = {};
@@ -51,6 +102,18 @@ const wsRoute = (app) => {
             messageType: "sensor_msgs/Joy",
           });
 
+          const robotPoseTopic = new ROSLIB.Topic({
+            ros: rosLidar,
+            name: "/robot_pose",
+            messageType: "geometry_msgs/Pose",
+          });
+
+          const goalTopic = new ROSLIB.Topic({
+            ros: rosLidar,
+            name: "/move_base_navi_simple/goal",
+            messageType: "geometry_msgs/Pose",
+          });
+
           try {
             const parsedMsg = JSON.parse(msg);
             console.log(parsedMsg);
@@ -75,6 +138,47 @@ const wsRoute = (app) => {
               ws.send(JSON.stringify(joyMsg));
             } else {
               ws.send("Invalid message format: axes and buttons are required");
+            }
+
+            //retrieve pose data from robot
+            robotPoseTopic.subscribe((message) => {
+              const pose = {
+                position: {
+                  x: message.position.x,
+                  y: message.position.y,
+                  z: message.position.z,
+                },
+                orientation: {
+                  x: message.orientation.x,
+                  y: message.orientation.y,
+                  z: message.orientation.z,
+                  w: message.orientation.w,
+                },
+              };
+
+              ws.send(JSON.stringify(pose));
+              console.log(pose);
+            });
+
+            //send pose data to robot
+            if (
+              parsedMsg.data.pose &&
+              parsedMsg.data.pose.position &&
+              parsedMsg.data.pose.orientation
+            ) {
+              const { position, orientation } = parsedMsg.data.pose;
+              const { x, y } = position;
+              const { z, w } = orientation;
+
+              const poseMsg = new ROSLIB.Message({
+                header: { frame_id: "map" },
+                pose: { position: { x, y }, orientation: { z, w } },
+              });
+
+              goalTopic.publish(poseMsg);
+              ws.send(JSON.stringify(poseMsg));
+            } else {
+              ws.send("give a right coordinates");
             }
           } catch (error) {
             console.error("Error processing message:", error);
@@ -193,9 +297,7 @@ async function updateTask(rfid, type) {
     task.station_to = newStation;
     task.time_end = Date.now();
     task.save();
-  }
-
-  else {
+  } else {
     console.log("ga ketemu");
     await Task.create({
       agv: agv,
