@@ -92,6 +92,11 @@ const wsRoute = (app) => {
       });
 
       rosLidar.on("connection", () => {
+        if (!clientsByURL["/ws/connect/lidar"]) {
+          clientsByURL["/ws/connect/lidar"] = [];
+        }
+        clientsByURL["/ws/connect/lidar"].push(ws);
+
         _lidarConnection = rosLidar;
         ws.send("ROSLib connection successful to ROSBRIDGE: " + msg);
 
@@ -184,6 +189,7 @@ const wsRoute = (app) => {
             console.error("Error processing message:", error);
             ws.send("Error processing message: " + error.message);
           }
+          broadcast("/ws/connect/lidar", msg);
         });
 
         rosLidar.on("close", () => {
