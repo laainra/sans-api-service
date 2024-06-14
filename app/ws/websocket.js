@@ -168,8 +168,13 @@ const wsRoute = (app) => {
               ws.send("Invalid message format: axes and buttons are required");
             }
 
-            // Retrieve robot pose data
-            const robotPoseHandler = (message) => {
+            const robotPoseTopic = new ROSLIB.Topic({
+              ros: rosLidar,
+              name: "/goal_pose",
+              messageType: "geometry_msgs/msg/PoseStamped",
+            });
+
+            robotPoseTopic.subscribe((message) => {
               const pose = {
                 header: {
                   seq: message.header.seq,
@@ -191,16 +196,7 @@ const wsRoute = (app) => {
 
               ws.send(JSON.stringify(pose));
               console.log("Robot pose:", pose);
-            };
-
-            // Define the topic with the correct messageType
-            const robotPoseTopic = new ROSLIB.Topic({
-              ros: rosLidar,
-              name: "/goal_pose",
-              messageType: "geometry_msgs/msg/PoseStamped",
             });
-
-            robotPoseTopic.subscribe(robotPoseHandler);
 
             //send pose data to robot
             if (
