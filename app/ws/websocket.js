@@ -130,16 +130,42 @@ const wsRoute = (app) => {
             messageType: "sensor_msgs/Joy",
           });
 
-          const robotPoseTopic = new ROSLIB.Topic({
-            ros: rosLidar,
-            name: "/robot_pose",
-            messageType: "geometry_msgs/Pose",
-          });
+          // const robotPoseTopic = new ROSLIB.Topic({
+          //   ros: rosLidar,
+          //   name: "/robot_pose",
+          //   messageType: "geometry_msgs/Pose",
+          // });
 
           const goalTopic = new ROSLIB.Topic({
             ros: rosLidar,
             name: "/move_base_navi_simple/goal",
             messageType: "geometry_msgs/Pose",
+          });
+
+          const robotPoseTopic = new ROSLIB.Topic({
+            ros: rosLidar,
+            name: "/goal_pose",
+            messageType: "geometry_msgs/msg/PoseStamped",
+          });
+
+          robotPoseTopic.subscribe((message) => {
+            const pose = {
+              position: {
+                x: message.pose.position.x,
+                y: message.pose.position.y,
+                z: message.pose.position.z,
+              },
+              orientation: {
+                x: message.pose.orientation.x,
+                y: message.pose.orientation.y,
+                z: message.pose.orientation.z,
+                w: message.pose.orientation.w,
+              },
+            };
+
+            ws.send(message);
+            ws.send(JSON.stringify(pose));
+            console.log("Robot pose:", pose);
           });
 
           try {
@@ -167,36 +193,6 @@ const wsRoute = (app) => {
             } else {
               ws.send("Invalid message format: axes and buttons are required");
             }
-
-            const robotPoseTopic = new ROSLIB.Topic({
-              ros: rosLidar,
-              name: "/goal_pose",
-              messageType: "geometry_msgs/msg/PoseStamped",
-            });
-
-            robotPoseTopic.subscribe((message) => {
-              const pose = {
-                header: {
-                  seq: message.header.seq,
-                  stamp: message.header.stamp,
-                  frame_id: message.header.frame_id,
-                },
-                position: {
-                  x: message.pose.position.x,
-                  y: message.pose.position.y,
-                  z: message.pose.position.z,
-                },
-                orientation: {
-                  x: message.pose.orientation.x,
-                  y: message.pose.orientation.y,
-                  z: message.pose.orientation.z,
-                  w: message.pose.orientation.w,
-                },
-              };
-
-              ws.send(JSON.stringify(pose));
-              console.log("Robot pose:", pose);
-            });
 
             //send pose data to robot
             if (
