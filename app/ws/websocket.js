@@ -70,43 +70,49 @@ const broadcast = (url, message) => {
 };
 
 const wsRoute = (app) => {
-  app.ws("/ws/lidar", (ws, req) => {
-    ws.on("message", (msg) => {
-      try {
-        const parsedMsg = JSON.parse(msg);
-        console.log("Received port from ngrok:", parsedMsg);
+  // app.ws("/ws/lidar", (ws, req) => {
+  //   ws.on("message", (msg) => {
+  //     try {
+  //       const parsedMsg = JSON.parse(msg);
+  //       console.log("Received port from ngrok:", parsedMsg);
 
-        broadcast("dashboard-lidar", JSON.stringify(parsedMsg));
-      } catch (error) {
-        console.error("Error processing message:", error);
-        ws.send("Error processing message: " + error.message);
-      }
-    });
+  //       broadcast("dashboard-lidar", JSON.stringify(parsedMsg));
+  //     } catch (error) {
+  //       console.error("Error processing message:", error);
+  //       ws.send("Error processing message: " + error.message);
+  //     }
+  //   });
 
-    ws.on("error", (error) => {
-      console.error("WebSocket error:", error);
-      ws.send("WebSocket error: " + error.message);
-    });
+  //   ws.on("error", (error) => {
+  //     console.error("WebSocket error:", error);
+  //     ws.send("WebSocket error: " + error.message);
+  //   });
 
-    ws.on("close", () => {
-      console.log("WebSocket connection closed");
-    });
-  });
-
+  //   ws.on("close", () => {
+  //     console.log("WebSocket connection closed");
+  //   });
+  // });
   app.ws("/ws/connect/lidar", (ws, req) => {
     let _lidarConnection;
     let _ngrokPort;
 
     ws.on("message", (msg) => {
+      console.log("Received message:", msg);
       try {
         const parsedMsg = JSON.parse(msg);
         if (parsedMsg.port) {
           _ngrokPort = parsedMsg.port;
+          console.log(_ngrokPort);
+        } else {
+          throw new Error("Invalid Ngrok port format");
         }
 
         const rosUrl = `ws://0.tcp.ap.ngrok.io:${_ngrokPort}`;
+        console.log(rosUrl);
 
-        if (_lidarConnection) return ws.send("ROSLib already connected");
+        if (_lidarConnection) {
+          return ws.send("ROSLib already connected");
+        }
 
         ws.send("Trying to connect");
 
@@ -121,8 +127,8 @@ const wsRoute = (app) => {
         });
 
         rosLidar.on("connection", () => {
-          if (!clientsByURL["/ws/connect/lidar"]) {
-            clientsByURL["/ws/connect/lidar"] = [];
+          if (!clientsByURL["connect/lidar"]) {
+            clientsByURL["connect/lidar"] = [];
           }
           clientsByURL["/ws/connect/lidar"].push(ws);
 
@@ -132,7 +138,7 @@ const wsRoute = (app) => {
           ws.on("message", async (msg) => {
             try {
               const parsedMsg = JSON.parse(msg);
-              console.log(parsedMsg);
+              console.log("Received message from client:", parsedMsg);
 
               if (
                 Array.isArray(parsedMsg.axes) &&
