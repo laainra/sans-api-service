@@ -130,7 +130,7 @@ const wsRoute = (app) => {
           if (!clientsByURL["connect/lidar"]) {
             clientsByURL["connect/lidar"] = [];
           }
-          clientsByURL["/ws/connect/lidar"].push(ws);
+          clientsByURL["connect/lidar"].push(ws);
 
           _lidarConnection = rosLidar;
           ws.send("ROSLib connection successful to ROSBRIDGE: " + rosUrl);
@@ -185,16 +185,21 @@ const wsRoute = (app) => {
               // Retrieve robot pose data
               const robotPoseHandler = (message) => {
                 const pose = {
+                  header: {
+                    seq: message.header.seq,
+                    stamp: message.header.stamp,
+                    frame_id: message.header.frame_id,
+                  },
                   position: {
-                    x: message.position.x,
-                    y: message.position.y,
-                    z: message.position.z,
+                    x: message.pose.position.x,
+                    y: message.pose.position.y,
+                    z: message.pose.position.z,
                   },
                   orientation: {
-                    x: message.orientation.x,
-                    y: message.orientation.y,
-                    z: message.orientation.z,
-                    w: message.orientation.w,
+                    x: message.pose.orientation.x,
+                    y: message.pose.orientation.y,
+                    z: message.pose.orientation.z,
+                    w: message.pose.orientation.w,
                   },
                 };
 
@@ -202,10 +207,11 @@ const wsRoute = (app) => {
                 console.log("Robot pose:", pose);
               };
 
+              // Define the topic with the correct messageType
               const robotPoseTopic = new ROSLIB.Topic({
                 ros: rosLidar,
-                name: "/robot_pose",
-                messageType: "geometry_msgs/Pose",
+                name: "/goal_pose",
+                messageType: "geometry_msgs/msg/PoseStamped",
               });
 
               robotPoseTopic.subscribe(robotPoseHandler);
