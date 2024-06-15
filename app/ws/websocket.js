@@ -71,12 +71,31 @@ const broadcast = (url, message) => {
 
 const wsRoute = (app) => {
   app.ws("/ws/lidar", (ws, req) => {
+    let isBroadcasting = false;
+    let currentMessage = null;
+
+    const broadcastMessage = async () => {
+      if (!isBroadcasting || !currentMessage) return;
+
+      broadcast("dashboard-lidar", JSON.stringify(currentMessage));
+      console.log("Broadcast message:", currentMessage);
+
+      setTimeout(() => {
+        broadcastMessage();
+      }, 5000);
+    };
+
     ws.on("message", (msg) => {
       try {
         const parsedMsg = JSON.parse(msg);
         console.log("Received port from ngrok:", parsedMsg);
 
-        broadcast("dashboard-lidar", JSON.stringify(parsedMsg));
+        // Update the current message and start broadcasting if not already
+        currentMessage = parsedMsg;
+        if (!isBroadcasting) {
+          isBroadcasting = true;
+          broadcastMessage();
+        }
       } catch (error) {
         console.error("Error processing message:", error);
         ws.send("Error processing message: " + error.message);
@@ -86,10 +105,12 @@ const wsRoute = (app) => {
     ws.on("error", (error) => {
       console.error("WebSocket error:", error);
       ws.send("WebSocket error: " + error.message);
+      isBroadcasting = false;
     });
 
     ws.on("close", () => {
       console.log("WebSocket connection closed");
+      isBroadcasting = false;
     });
   });
 
@@ -115,13 +136,33 @@ const wsRoute = (app) => {
       });
 
       rosLidar.on("connection", () => {
-        if (!clientsByURL["/ws/connect/lidar"]) {
-          clientsByURL["/ws/connect/lidar"] = [];
-        }
-        clientsByURL["/ws/connect/lidar"].push(ws);
-
         _lidarConnection = rosLidar;
         ws.send("ROSLib connection successful to ROSBRIDGE: " + msg);
+
+        const robotPoseTopic = new ROSLIB.Topic({
+          ros: rosLidar,
+          name: "/goal_pose",
+          messageType: "geometry_msgs/PoseStamped",
+        });
+
+        robotPoseTopic.subscribe((message) => {
+          const pose = {
+            position: {
+              x: message.pose.position.x,
+              y: message.pose.position.y,
+              z: message.pose.position.z,
+            },
+            orientation: {
+              x: message.pose.orientation.x,
+              y: message.pose.orientation.y,
+              z: message.pose.orientation.z,
+              w: message.pose.orientation.w,
+            },
+          };
+
+          ws.send(JSON.stringify(pose));
+          console.log("Robot pose:", pose);
+        });
 
         ws.on("message", async (msg) => {
           const joyTopic = new ROSLIB.Topic({
@@ -136,37 +177,11 @@ const wsRoute = (app) => {
           //   messageType: "geometry_msgs/Pose",
           // });
 
-          const goalTopic = new ROSLIB.Topic({
-            ros: rosLidar,
-            name: "/move_base_navi_simple/goal",
-            messageType: "geometry_msgs/Pose",
-          });
-
-          const robotPoseTopic = new ROSLIB.Topic({
-            ros: rosLidar,
-            name: "/goal_pose",
-            messageType: "geometry_msgs/msg/PoseStamped",
-          });
-
-          robotPoseTopic.subscribe((message) => {
-            const pose = {
-              position: {
-                x: message.pose.position.x,
-                y: message.pose.position.y,
-                z: message.pose.position.z,
-              },
-              orientation: {
-                x: message.pose.orientation.x,
-                y: message.pose.orientation.y,
-                z: message.pose.orientation.z,
-                w: message.pose.orientation.w,
-              },
-            };
-
-            ws.send(message);
-            ws.send(JSON.stringify(pose));
-            console.log("Robot pose:", pose);
-          });
+          // const goalTopic = new ROSLIB.Topic({
+          //   ros: rosLidar,
+          //   name: "/",
+          //   messageType: "geometry_msgs/Pose",
+          // });
 
           try {
             const parsedMsg = JSON.parse(msg);
@@ -196,11 +211,11 @@ const wsRoute = (app) => {
 
             //send pose data to robot
             if (
-              parsedMsg.data.pose &&
-              parsedMsg.data.pose.position &&
-              parsedMsg.data.pose.orientation
+              parsedMsg.pose &&
+              parsedMsg.pose.position &&
+              parsedMsg.pose.orientation
             ) {
-              const { position, orientation } = parsedMsg.data.pose;
+              const { position, orientation } = parsedMsg.pose;
               const { x, y } = position;
               const { z, w } = orientation;
 
@@ -209,7 +224,7 @@ const wsRoute = (app) => {
                 pose: { position: { x, y }, orientation: { z, w } },
               });
 
-              goalTopic.publish(poseMsg);
+              robotPoseTopic.publish(poseMsg);
               ws.send(JSON.stringify(poseMsg));
             } else {
               ws.send("give a right coordinates");
