@@ -70,10 +70,49 @@ const broadcast = (url, message) => {
 };
 
 const wsRoute = (app) => {
-    setTimeout(() => {
+  app.ws("/ws/lidar", (ws, req) => {
+    let isBroadcasting = false;
+    let currentMessage = null;
+
+    const broadcastMessage = async () => {
+      if (!isBroadcasting || !currentMessage) return;
+
+      broadcast("dashboard-lidar", JSON.stringify(currentMessage));
+      console.log("Broadcast message:", currentMessage);
+
+      setTimeout(() => {
         broadcastMessage();
       }, 1000);
     };
+
+    ws.on("message", (msg) => {
+      try {
+        const parsedMsg = JSON.parse(msg);
+        console.log("Received port from ngrok:", parsedMsg);
+
+        // Update the current message and start broadcasting if not already
+        currentMessage = parsedMsg;
+        if (!isBroadcasting) {
+          isBroadcasting = true;
+          broadcastMessage();
+        }
+      } catch (error) {
+        console.error("Error processing message:", error);
+        ws.send("Error processing message: " + error.message);
+      }
+    });
+
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error);
+      ws.send("WebSocket error: " + error.message);
+      isBroadcasting = false;
+    });
+
+    ws.on("close", () => {
+      console.log("WebSocket connection closed");
+      isBroadcasting = false;
+    });
+  });
 
   app.ws("/ws/connect/lidar", (ws, req) => {
     let _lidarConnection;
