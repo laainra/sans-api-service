@@ -391,36 +391,4 @@ async function startWaypoint(waypointId) {
   }
 }
 
-async function updateWaypoint(data) {
-  const { position, orientation } = data;
-  const { x, y } = position;
-  const { z, w } = orientation;
-
-  try {
-    let waypoints = await Waypoint.find({
-      "pose_to.x": x,
-      "pose_to.y": y,
-      "pose_to.z": z,
-      "pose_to.w": w,
-      status: "On Process",
-    });
-
-    if (waypoints.length > 0) {
-      const waypoint = waypoints[0];
-      console.log("waypoint ketemu:", waypoint);
-
-      waypoint.status = "Finished";
-      waypoint.time_end = new Date();
-      await waypoint.save();
-
-      console.log("waypoint dah selesai:", waypoint);
-      broadcast("/ws/connect/lidar", JSON.stringify({ waypoint }));
-    } else {
-      console.log("waypoint ga ketemu");
-    }
-  } catch (error) {
-    console.error("Error finding/updating waypoints:", error);
-  }
-}
-
 module.exports = { broadcast, wsRoute };
